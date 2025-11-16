@@ -1,0 +1,25 @@
+SELECT TOP (1000) spec.[Id]
+      ,[CustomValue]
+      ,[ProductId]
+      ,[SpecificationAttributeOptionId]
+      ,[AttributeTypeId]
+      ,[AllowFiltering]
+      ,[ShowOnProductPage]
+      ,spcOpt.DisplayOrder
+      ,spcOpt.Name
+      ,specMap.ProductId
+      ,p.*
+
+
+  FROM [Belson4.91].[dbo].[Product_SpecificationAttribute_Mapping] specMap
+      inner join Product p on p.Id = specMap.ProductId
+      inner join Product p2 on p2.Id = p.ParentGroupedProductId
+
+      inner join SpecificationAttributeOption spcOpt on spcOpt.Id =  specMap.SpecificationAttributeOptionId 
+      inner join SpecificationAttribute spec on spec.Id = spcOpt.SpecificationAttributeId
+      inner join SpecificationAttributeGroup specGr on specGr.Id = spec.SpecificationAttributeGroupId
+ 
+ where  p.ParentGroupedProductId = 48
+     and spcOpt.Id in (select [Product_SpecificationAttribute_Mapping].SpecificationAttributeOptionId from [Product_SpecificationAttribute_Mapping] where ProductId = p2.Id)
+
+  order by  spcOpt.DisplayOrder, p.DisplayOrder  asc

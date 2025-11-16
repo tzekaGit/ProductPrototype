@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductPrototype.Web", "ProductPrototype.Web\ProductPrototype.Web.csproj", "{B9A36D8E-8C6B-A222-9E50-E12D978C0A4C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductPrototype.DbAccess", "ProductPrototype.DbAccess\ProductPrototype.DbAccess.csproj", "{4C31FBF1-B5AE-B5DC-E017-9FA9C0342DCA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B9A36D8E-8C6B-A222-9E50-E12D978C0A4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9A36D8E-8C6B-A222-9E50-E12D978C0A4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9A36D8E-8C6B-A222-9E50-E12D978C0A4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9A36D8E-8C6B-A222-9E50-E12D978C0A4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C31FBF1-B5AE-B5DC-E017-9FA9C0342DCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C31FBF1-B5AE-B5DC-E017-9FA9C0342DCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C31FBF1-B5AE-B5DC-E017-9FA9C0342DCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C31FBF1-B5AE-B5DC-E017-9FA9C0342DCA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8442B7BC-90EA-4686-B562-C43ABB56E4E8}
+	EndGlobalSection
+EndGlobal
