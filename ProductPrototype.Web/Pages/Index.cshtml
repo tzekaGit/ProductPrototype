@@ -1,19 +1,372 @@
 ﻿@page
 @using ProductPrototype.DbAccess;
+@using ProductPrototype.DbAccess.Data.Models
 
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
+    var productInfo = Model.ProductDetails.Where(prod => prod.ParentGroupedProductId == 0)
+                                          .FirstOrDefault();
+
+    string fullDescription = string.Empty;
+
+
+    fullDescription = (productInfo?.FullDescription
+                      .Replace("{Short-Description}", productInfo.ShortDescription)
+                      .Replace("{product-header-title}", productInfo.Name)) + "";
+
+    List<ProductAttributeValue> productAttributeValues = (List<ProductAttributeValue>)default;
+    if (Model.ProductDetails?.Count()>1){
+        productAttributeValues = Model.ProductDetails?[1]
+                                      .ProductAttributes?[0]
+                                      .ProductAttributeValues;
+    }
+    
+    var variants = Model.ProductDetails;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@section Styles {
+    <link href="~/css/belson.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 0px;
+            margin: 0;
+        }
+
+        table tr {
+            border-bottom: 1px solid #aaa;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+            width: 100%;
+            margin: 0 auto;
+            border: none
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .product-table th {
+                background-color: #2c3e50;
+                color: white;
+                padding: 0;
+                margin: 0;
+                border: none;
+                height: 0;
+            }
+    </style>
+
+        <style>
+		body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #111; color: #000; font-family: sans-serif; }
+		#colorContainer { width: 100%; text-align: center; }
+		#spheresContainer { background: #fff; padding: 30px; }
+		.frame { display: inline-block; position: relative; align-items: center; text-align: center; justify-content: center; }
+		.frame-title { margin: 20px 0 8px 0; font-size: 0.9rem; font-weight: 400; text-align: center; }
+		.sphere-set::before { content: ""; position: absolute; top: -5px; left: 40px; right: 40px; height: 1px; background: #000; z-index: 0; }
+		.sphere-set::after { content: ""; position: absolute; top: -4px; left: 40px; width: 1px; height: 22px; background: #000; z-index: 0; }
+		.vertical-right { position: absolute; top: -4px; right: 40px; width: 1px; height: 20px; background: #000; z-index: 0; }
+		.sphere-set { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; padding: 10px 20px; }
+		.sphere { width: 32px; height: 32px; border-radius: 50%; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), 0 5px 12px rgba(0,0,0,0.6); filter: brightness(80%); }
+
+    /* Gloss / Textured colors */
+    /* Gloss Colors */
+    .green { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #33cc33; }
+    .blue { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #007bff; }
+    .ultra-blue { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #0057ff; }
+    .purple { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #8e44ad; }
+    .red { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #ff3333; }
+    .burgundy { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #800020; }
+    .orange { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #ff7b00; }
+    .beige { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #f5f5dc; }
+    .black { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #000000; }
+
+    /* Textured Colors */
+    .mariner-blue { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #3b5998; }
+    .mystic-blue { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #4a90e2; }
+    .green-textured { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #33cc33; }
+    .fern { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #4f7942; }
+    .yellow { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #ffff00; }
+    .red-textured { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #ff3333; }
+    .brown { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #8b4513; }
+    .gray { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #808080; }
+    .black-textured { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #000000; }
+
+    .sphere-wrapper { display: flex; flex-direction: column; align-items: center; width: 45px;}
+    .sphere-label { margin-top: 5px; font-size: 0.8rem; color: #000; text-align: center; }
+
+    </style>
+}
+
+<div id="presentation">
+
+    <!-- ============================[ Product Area Start ]================================================== -->
+    <div id="product">
+        <div>
+            @Html.Raw(fullDescription)
+        </div>
+    </div>
+    <!-- ============================[ Product Area End ]==================================================== -->
+    <!-- ============================[ Pricing Area Start ]================================================== -->
+    <div id="pricing">
+        <!-- ============================[ Widget Area Start ]=================================================== -->
+
+        <div id="widget">
+            <div id="itemDetails"><div id="arrow">&#9660;</div>Item Specific Details Available on Linked Model Numbers Below</div>
+            <div id="question">
+                <a onclick="askAbout()">
+                    <img src="/Images/question2.png" style="cursor: pointer;" border="0" width="26" height="22" title="Ask An Expert" alt="">
+                </a>
+            </div>
+            <div id="share" onmouseover="showmenu('shares')" onmouseout="hidemenu('shares')">
+                <a style="cursor: pointer;">
+                    <img border="0" src="/Images/share2.png" width="26" height="22" title="Share" alt="Share">
+                </a>
+                <div id="shares">
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/facebook_16.png" alt="Facebook Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://www.facebook.com/share.php?u=" + document.location.href + "&t=" + document.title + "' target='_blank' class='share-facebook' >Facebook</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/blogger_16.png" alt="Blogger Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://www.blogger.com/blog_this.pyra?u=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-blogger' >Blogger</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/linkedin_16.png" alt="Linkedin Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://www.linkedin.com/shareArticle?mini=true&url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-linkedin' >Linkedin</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/stumbleupon_16.png" alt="Stumbleupon Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://www.stumbleupon.com/submit?url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-stumbleupon' >StumbleUpon</a>")</script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bookmark" onmouseover="showmenu('bookmarks')" onmouseout="hidemenu('bookmarks')">
+                <a style="cursor: pointer;">
+                    <img border="0" src="/Images/bookmark2.png" width="26" height="22" title="Bookmark" alt="Bookmarks">
+                </a>
+                <div id="bookmarks">
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/pinterest_16.png" alt="Pinterest Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://pinterest.com/pin/create/bookmarklet/?media=&url=" + document.location.href + "' target='_blank' class='share-pinterest' >Pinterest</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/windows_16.png" alt="Windows Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='https://favorites.live.com/quickadd.aspx?marklet=1&mkt=en-us&url=" + document.location.href + "&title=" + document.title + "&top=1' target='_blank' class='share-live' >Live</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/reddit_16.png" alt="Reddit Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://reddit.com/submit?url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-reddit' >Reddit</a>")</script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================[ Widget Area End ]===================================================== -->
+
+
+        <div class="table-container">
+            <table id="productTable" class="product-table">
+                <thead>
+                <th id="sku-h"></th>
+                <th id="mount-h"></th>
+                <th id="seat-h" style="width: 120px;"></th>
+                <th id="frame-h" style="width: 120px;"></th>
+                <th id="weight-h"></th>
+                <th id="price-h"></th>
+                <th id="qty-h"></th>
+                </thead>
+                <tbody>
+                    <!-- Product rows will be added dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <table>
+            <tr>
+                <td id="FOB">(Prices F.O.B. Origin)<br />Some Assembly Required</td>
+                <td id="bulk_td">
+                    <div id="bulk_inquiry">
+                        <b><a href="javascript:showmenu('bulk')">Bulk Inquiry</a></b>
+                        <div id="bulk">
+                            <div id="bulk_head">
+                                <div id="bulk_title">
+                                    <b>&#9660; Bulk Inquiry</b>
+                                </div>
+                                <div id="bulk_close">
+                                    <a href="javascript:hidemenu('bulk')">
+                                        <img border="0" src="/Images/close-001.png" width="12" height="12" />
+                                    </a>
+                                </div>
+                            </div>
+                            <div id="bulk_copy">
+                                Enter Item Quantities &amp; <b>'Add to Cart'</b><br />
+                                From the 'Shop Cart' Screen -<br />
+                                Select <b>'Click for Quote'</b> (<i>Yellow Button</i>)<br />
+                                <div id="bulk_copy2">
+                                    Our expert Customer Service staff will work with
+                                    you to provide the best pricing options available.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td id="addToCart_td"><input type="submit" name="ctl00$BodyContent$SubmitBtn" value="Add to Cart" onclick="return validate();" id="SubmitBtn" class="addToCartButton" /></td>
+            </tr>
+        </table>
+    </div>
+    <!-- ============================[ Pricing Area End ]==================================================== -->
+    <!-- ============================[ Promotion Area Start ]================================================ -->
+    <div id="promotion">
+        <div class="promoRelated">
+            <div class="promoBar"><img src="/Images/barbg-top.jpg" width="605" height="25" /></div>
+            <div class="promoTitle"><a href="/Park-Benches" class="promoTitleLink">Related Products</a></div>
+        </div>
+        <div class="promos">
+            <div class="promoItem">
+                <a href="/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel">
+                    <img border="0" src="/Images/942SM-V6-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                    Steel Players'<br />
+                    Benches
+                </a>
+            </div>
+            <div class="promoItem">
+                <a href="/Classic-Style-Square-Steel-Picnic-Table-Diamond-Pattern">
+                    <img border="0" src="/Images/358-V-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                    Square Steel<br />
+                    Picnic Table
+                </a>
+            </div>
+            <div class="promoItem">
+                <a href="/Classic-Style-Rectangular-Steel-Picnic-Table-Diamond-Pattern">
+                    <img border="0" src="/Images/238-V6-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                    Rectangular Steel<br />
+                    Picnic Table
+                </a>
+            </div>
+            <div class="promoItem">
+                <a href="/Square-Shade-Structure">
+                    <img border="0" src="/Images/Square-Shade-001-S.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                    Square<br />
+                    Shade Structure
+                </a>
+            </div>
+        </div>
+        <div class="pagination">
+            <div id="pre"><div id="previous"><a href="/Browse.aspx?b=-1"><img src="/Images/previousA.jpg" border="0" width="110" height="25" /></a></div></div>
+            <div id="copyright"><a href="/Copyright-and-Disclaimer">Copyright and Disclaimer</a> &copy; 1993-2025, Belson Outdoors, LLC</div>
+            <div id="nex"><div id="next"><a href="/Browse.aspx?b=1"><img src="/Images/nextA.jpg" border="0" width="110" height="25" /></a></div></div>
+        </div>
+    </div>
+    <!-- ============================[ Promotion Area End ]================================================== -->
+    <br />
+    <!-- ============================[ Footer Area Start ]=================================================== -->
+
+    <div id="footer">
+        <div class="footerBar"><img border="0" src="/Images/botbar.jpg" alt="Call 1-800-323-5664 or Email sales@belson.com" width="605" height="48"></div>
+        <div class="footerMenu">
+            <a href="/" class="foot">Home</a> |
+            <a href="/About-Us" class="foot">About Us</a> |
+            <a href="/Contact-Us" class="foot">Contact Us</a> |
+            <a href="/FAQs" class="foot">FAQs</a> |
+            <a href="/Privacy-Policy" class="foot">Privacy Policy</a> |
+            <a href="/Sitemap" class="foot">Site Map</a> |
+            <a href="/Payment" class="foot">Payments</a> |
+            <a href="/ShoppingCart/Items" class="foot"><b>Shopping Cart</b></a>
+        </div>
+        <div class="footerTargets">
+            <span class="foot">627 Amersale Drive | Naperville, IL 60563 | (800) 323-5664 | <a href="mailto:sales@belson.com">sales@belson.com</a></span>
+        </div>
+    </div>
+    <!-- ============================[ Footer Area End ]===================================================== -->
+
 </div>
 
+
+
+
 @section Scripts {
+    <script src="~/js/buildproducttable.js"></script>
+    <script src="~/js/templates.js"></script>
+    <script src="~/js/product-colors.js"></script>
+  
     <script>
-        const products = @Json.Serialize(IndexModel.products); 
-         const attrs = @Json.Serialize(IndexModel.attrs);
+        let productAttributeValues = @Json.Serialize(productAttributeValues);
+        // Execute the rendering function when the page is ready
+        $(document).ready(function () {
+            const $table = $("#productTable");
+            const $dimension = $(".dimT");
+            let dimensionGroup = {};
+
+            const tableData = @Json.Serialize(variants);
+                
+                tableData.forEach((prod, index) => 
+                {
+                    if(prod.parentGroupedProductId==0)
+                    {
+                    let headerData =
+                        {
+                            name: prod.name,
+                            length: prod.specificationOptionName
+                        };
+                        const productHeaderHtml = benchHeader_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
+                        $tbody.append(productHeaderHtml);
+                    }
+                    else
+                    {
+                        //Create dimesions table
+                        let type = prod.specificationOptionName.trim().toLowerCase();
+                            type = type.replace(/\s+/g, '-');
+                            if (!dimensionGroup[type]) 
+                                dimensionGroup[type] = [];
+
+                            if( dimensionGroup[type].length ==0)
+                            {
+                                let productData =
+                                {
+                                    length: prod.length,
+                                    width: prod.width,
+                                    height: prod.height,
+                                    specificationOptionName:prod.specificationOptionName
+                                };
+                                dimensionGroup[type].push(productData);
+                                const productDimensionsHtml = dimensions_template.replace(/{(\w+)}/g, (match, key) => productData[key] ?? match);
+                                $dimension.append(productDimensionsHtml);
+                            }
+                         $table.append(buildVariantRow(prod, index));
+                      }
+                });
+
+                
+            createProductColors();
+        });
     </script>
 }

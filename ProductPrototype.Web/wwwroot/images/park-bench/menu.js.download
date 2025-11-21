@@ -1,0 +1,8 @@
+function showmenu(id)
+{
+document.getElementById(id).style.visibility="visible"
+}
+function hidemenu(id)
+{
+document.getElementById(id).style.visibility="hidden"
+}

@@ -1,0 +1,365 @@
+﻿@page
+@using ProductPrototype.DbAccess;
+
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+@section Styles {
+    <link href="~/css/belson.css" rel="stylesheet" />
+	<style>
+		body {
+			background-color: #f5f5f5;
+			font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+			padding: 0px;
+			margin: 0;
+		}
+
+		table tr {
+			border-bottom: 1px solid #aaa;
+		}
+
+		.table-container {
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+			overflow: hidden;
+			width: 100%;
+			margin: 0 auto;
+			border: 1px solid red;
+		}
+
+		.product-table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+
+			.product-table th {
+				background-color: #2c3e50;
+				color: white;
+				padding: 0;
+				margin: 0;
+				border: none;
+				height: 0;
+			}
+	</style>
+	}
+
+<div id="presentation">
+    <!-- ============================[ Product Area Start ]================================================== -->
+    <div id="product">
+        <div class="productHeader">
+            <div class="productHeaderDiv">
+                <div class="productHeaderBar"><img src="/Images/park-bench/phExpanded2.jpg" width="605" height="60"></div>
+                <div class="productHeaderBarPrint"><img src="/Images/park-bench/phExpanded2Print.jpg" width="605" height="60"></div>
+                <div class="productHeaderTitle"><h1 id="px20-1" class="cffffff">Park Bench with Diamond Pattern Steel</h1></div>
+            </div>
+        </div>
+
+        <div class="wrapper">
+            <a href="javascript:gallery('940S-V6')">
+                <img border="0" src="/Images/park-bench/940S-V6-001-M.jpg" width="605" height="355" alt="" />
+            </a>
+        </div>
+
+        <div class="wrapper">
+            <div class="rightR">
+                <h2 id="px18" style="text-align: left; color: #616c7b;">Popular Park Benches</h2>
+                <p class="justify">
+                    Popular for a wide variety of installations, the classic diamond pattern steel
+                    park bench offers versatility, built for resiliency and made for enjoyment. These benches feature
+                    smooth rounded edges for increased safety and comfort.
+                </p>
+                <div id="px16" style="width: 295px; text-align: left; color: #616c7b; padding: 3px 0; margin-top: 14px; border-top: 1px solid #616c7b;"><b>Mount Styles</b></div>
+                <div style="width: 295px; overflow: hidden; padding: 6px 0; border-top: 1px solid #616c7b; border-bottom: 1px solid #616c7b; background-color: #e9e9cf;">
+                    <div style="height: 86px;">
+                        <div style="width: 144px; height: 86px; float: left;">
+                            <a href="javascript:closerlook('/Images/US278-Portable-Mount-Detail-001-C.jpg','Portable (Mount) Detail')">
+                                <img border="0" src="/Images/park-bench/US278-Portable-Mount-Detail-001-D.png" width="130" height="86" alt="Portable Mount Detail" />
+                            </a>
+                        </div>
+                        <div style="width: 144px; height: 86px; float: right;">
+                            <a href="javascript:closerlook('/Images/US278-In-ground-Mount-Detail-001-C.jpg','In-ground Mount Detail')">
+                                <img border="0" src="/Images/park-bench/US278-In-ground-Mount-Detail-001-D.png" width="130" height="86" alt="In-ground Mount Detail" />
+                            </a>
+                        </div>
+                    </div>
+                    <div style="height: 20px;">
+                        <div style="width: 144px; font-size: 11px; float: left;">Portable (Mount)</div>
+                        <div style="width: 144px; font-size: 11px; float: right;">In-ground Mount</div>
+                    </div>
+                    <div style="border-top: 1px solid #616c7b; padding-top: 3px;">
+                        <div style="width: 144px; height: 86px; float: left;">
+                            <a href="javascript:closerlook('/Images/US278-Surface-Mount-Detail-001-C.jpg','Surface Mount Detail')">
+                                <img border="0" src="/Images/park-bench/US278-Surface-Mount-Detail-001-D.png" width="130" height="86" alt="Surface Mount Detail" />
+                            </a>
+                        </div>
+                        <div style="width: 144px; height: 86px; float: right;">
+                            <a href="javascript:closerlook('/Images/US278-Wall-Mount-Detail-001-C.jpg','Wall Mount Detail')">
+                                <img border="0" src="/Images/park-bench/US278-Wall-Mount-Detail-001-D.png" width="130" height="86" alt="Wall Mount Detail" />
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="width: 144px; font-size: 11px; float: left;">Surface Mount</div>
+                        <div style="width: 144px; font-size: 11px; float: right;">Wall Mount</div>
+                    </div>
+                </div>
+                <p class="justify">
+                    The structurally sound steel bench frames are powder-coated and available in portable,
+                    in-ground, surface and wall mount options.
+                </p>
+            </div>
+            <div class="leftR">
+                <a href="javascript:gallery('940SM-V6')">
+                    <img style="margin-top: 8px;" border="0" src="{images}" width="295" height="186" alt="" /><br />
+                    <b>Model 940SM-V6</b>
+                </a>
+                <p style="margin-top: 16px;" class="justify">
+                    {Short Description}
+                </p>
+
+                <div style="margin-top: 16px;" class="dimT"><b>Dimensions</b></div>
+                {dimentions}
+            </div>
+            <div class="spaceR"><!-- [] --></div>
+        </div>
+        <div class="wrapper">
+            <div id="colorContainer">
+                <div id="spheresContainer"></div>
+            </div>
+        </div>
+    </div>
+    <!-- ============================[ Product Area End ]==================================================== -->
+    <!-- ============================[ Pricing Area Start ]================================================== -->
+    <div id="pricing">
+        <!-- ============================[ Widget Area Start ]=================================================== -->
+
+        <div id="widget">
+            <div id="itemDetails"><div id="arrow">&#9660;</div>Item Specific Details Available on Linked Model Numbers Below</div>
+            <div id="question">
+                <a onclick="askAbout()">
+                    <img src="/Images/park-bench/question2.png" style="cursor: pointer;" border="0" width="26" height="22" title="Ask An Expert" alt="">
+                </a>
+            </div>
+            <div id="share" onmouseover="showmenu('shares')" onmouseout="hidemenu('shares')">
+                <a style="cursor: pointer;">
+                    <img border="0" src="/Images/park-bench/share2.png" width="26" height="22" title="Share" alt="Share">
+                </a>
+                <div id="shares">
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/park-bench/facebook_16.png" alt="Facebook Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://www.facebook.com/share.php?u=" + document.location.href + "&t=" + document.title + "' target='_blank' class='share-facebook' >Facebook</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/park-bench/blogger_16.png" alt="Blogger Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://www.blogger.com/blog_this.pyra?u=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-blogger' >Blogger</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/park-bench/linkedin_16.png" alt="Linkedin Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://www.linkedin.com/shareArticle?mini=true&url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-linkedin' >Linkedin</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/park-bench/stumbleupon_16.png" alt="Stumbleupon Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://www.stumbleupon.com/submit?url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-stumbleupon' >StumbleUpon</a>")</script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="bookmark" onmouseover="showmenu('bookmarks')" onmouseout="hidemenu('bookmarks')">
+                <a style="cursor: pointer;">
+                    <img border="0" src="/Images/park-bench/bookmark2.png" width="26" height="22" title="Bookmark" alt="Bookmarks">
+                </a>
+                <div id="bookmarks">
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/park-bench/pinterest_16.png" alt="Pinterest Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://pinterest.com/pin/create/bookmarklet/?media=&url=" + document.location.href + "' target='_blank' class='share-pinterest' >Pinterest</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/park-bench/windows_16.png" alt="Windows Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='https://favorites.live.com/quickadd.aspx?marklet=1&mkt=en-us&url=" + document.location.href + "&title=" + document.title + "&top=1' target='_blank' class='share-live' >Live</a>")</script>
+                        </div>
+                    </div>
+                    <div class="slink">
+                        <div class="sicon">
+                            <img border="0" src="/Images/park-bench/reddit_16.png" alt="Reddit Icon">
+                        </div><div class="stitle">
+                            <script type="text/javascript">document.write("<a href='http://reddit.com/submit?url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-reddit' >Reddit</a>")</script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================[ Widget Area End ]===================================================== -->
+   
+
+        <div class="table-container">
+            <table id="productTable" class="product-table">
+                <thead>
+                <th id="sku-h"></th>
+                <th id="mount-h"></th>
+                <th id="seat-h" style="width: 120px;"></th>
+                <th id="frame-h" style="width: 120px;"></th>
+                <th id="weight-h"></th>
+                <th id="price-h"></th>
+                <th id="qty-h"></th>
+                </thead>
+                <tbody>
+                    <!-- Product rows will be added dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <table>
+            <tr>
+                <td id="FOB">(Prices F.O.B. Origin)<br />Some Assembly Required</td>
+                <td id="bulk_td">
+                    <div id="bulk_inquiry">
+                        <b><a href="javascript:showmenu('bulk')">Bulk Inquiry</a></b>
+                        <div id="bulk">
+                            <div id="bulk_head">
+                                <div id="bulk_title">
+                                    <b>&#9660; Bulk Inquiry</b>
+                                </div>
+                                <div id="bulk_close">
+                                    <a href="javascript:hidemenu('bulk')">
+                                        <img border="0" src="/Images/park-bench/close-001.png" width="12" height="12" />
+                                    </a>
+                                </div>
+                            </div>
+                            <div id="bulk_copy">
+                                Enter Item Quantities &amp; <b>'Add to Cart'</b><br />
+                                From the 'Shop Cart' Screen -<br />
+                                Select <b>'Click for Quote'</b> (<i>Yellow Button</i>)<br />
+                                <div id="bulk_copy2">
+                                    Our expert Customer Service staff will work with
+                                    you to provide the best pricing options available.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td id="addToCart_td"><input type="submit" name="ctl00$BodyContent$SubmitBtn" value="Add to Cart" onclick="return validate();" id="SubmitBtn" class="addToCartButton" /></td>
+            </tr>
+        </table>
+    </div>
+    <!-- ============================[ Pricing Area End ]==================================================== -->
+    <!-- ============================[ Promotion Area Start ]================================================ -->
+    <div id="promotion">
+        <div class="promoRelated">
+            <div class="promoBar"><img src="/Images/park-bench/barbg-top.jpg" width="605" height="25" /></div>
+            <div class="promoTitle"><a href="/Park-Benches" class="promoTitleLink">Related Products</a></div>
+        </div>
+        <div class="promos">
+            <div class="promoItem">
+                <a href="/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel">
+                    <img border="0" src="/Images/park-bench/942SM-V6-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                    Steel Players'<br />
+                    Benches
+                </a>
+            </div>
+            <div class="promoItem">
+                <a href="/Classic-Style-Square-Steel-Picnic-Table-Diamond-Pattern">
+                    <img border="0" src="/Images/park-bench/358-V-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                    Square Steel<br />
+                    Picnic Table
+                </a>
+            </div>
+            <div class="promoItem">
+                <a href="/Classic-Style-Rectangular-Steel-Picnic-Table-Diamond-Pattern">
+                    <img border="0" src="/Images/park-bench/238-V6-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                    Rectangular Steel<br />
+                    Picnic Table
+                </a>
+            </div>
+            <div class="promoItem">
+                <a href="/Square-Shade-Structure">
+                    <img border="0" src="/Images/park-bench/Square-Shade-001-S.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                    Square<br />
+                    Shade Structure
+                </a>
+            </div>
+        </div>
+        <div class="pagination">
+            <div id="pre"><div id="previous"><a href="/Browse.aspx?b=-1"><img src="/Images/park-bench/previousA.jpg" border="0" width="110" height="25" /></a></div></div>
+            <div id="copyright"><a href="/Copyright-and-Disclaimer">Copyright and Disclaimer</a> &copy; 1993-2025, Belson Outdoors, LLC</div>
+            <div id="nex"><div id="next"><a href="/Browse.aspx?b=1"><img src="/Images/park-bench/nextA.jpg" border="0" width="110" height="25" /></a></div></div>
+        </div>
+    </div>
+    <!-- ============================[ Promotion Area End ]================================================== -->
+    <br />
+    <!-- ============================[ Footer Area Start ]=================================================== -->
+
+    <div id="footer">
+        <div class="footerBar"><img border="0" src="/Images/park-bench/botbar.jpg" alt="Call 1-800-323-5664 or Email sales@belson.com" width="605" height="48"></div>
+        <div class="footerMenu">
+            <a href="/" class="foot">Home</a> |
+            <a href="/About-Us" class="foot">About Us</a> |
+            <a href="/Contact-Us" class="foot">Contact Us</a> |
+            <a href="/FAQs" class="foot">FAQs</a> |
+            <a href="/Privacy-Policy" class="foot">Privacy Policy</a> |
+            <a href="/Sitemap" class="foot">Site Map</a> |
+            <a href="/Payment" class="foot">Payments</a> |
+            <a href="/ShoppingCart/Items" class="foot"><b>Shopping Cart</b></a>
+        </div>
+        <div class="footerTargets">
+            <span class="foot">627 Amersale Drive | Naperville, IL 60563 | (800) 323-5664 | <a href="mailto:sales@belson.com">sales@belson.com</a></span>
+        </div>
+    </div>
+    <!-- ============================[ Footer Area End ]===================================================== -->
+
+</div>
+
+
+
+
+@section Scripts {
+    <script src="~/js/buildproducttable.js"></script>
+    <script src="~/js/templates.js"></script>
+    <script>
+
+
+        // Execute the rendering function when the page is ready
+        $(document).ready(function () {
+			const $table = $("#productTable");
+			const tableData = @Json.Serialize(Model.ProductDetails);
+	
+				 tableData.forEach((product, index) => {
+
+                    if(product.parentGroupedProductId==0)
+					{
+					let headerData =
+						{
+							name: product.productName,
+							length: product.specificationOptionName
+						};
+						// Parent row
+						const productHeaderHtml = benchHeader_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
+						$tbody.append(productHeaderHtml);
+					}
+					else
+					{
+						$table.append(buildVariantRow(product, index));
+					}
+				});
+				
+        });
+    </script>
+}

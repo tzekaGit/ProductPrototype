@@ -1,26 +1,38 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
+using ProductPrototype.DbAccess.Data.ModelDto;
 using ProductPrototype.DbAccess.Data.Models;
+using ProductPrototype.DbAccess.Interfaces;
+using ProductPrototype.DbAccess.Services;
+using System.Text.Json;
 
 namespace ProductPrototype.DbAccess;
 
-public class GetDataFromDb
+public class GetDataFromDb : IGetDataFromDb
 {
+    readonly ProductService _productService;
+    public GetDataFromDb(ProductService productService)
+    {
+        _productService = productService;
+    }
 
-    public static async Task<List<Product>> GetProductsAsync(int parentId)
+    public async Task<List<ProductDetailDto>> GetProductsAsync(int parentId)
     {
         using (var context = new RepositoryContext())
         {
             try
             {
                 Console.WriteLine("Executing EF Core 10 Query...");
-
                 // LINQ query: The filtering is translated into a 'WHERE' clause in SQL
-                List<Product> products = await context.Products
-                    .Where(p => p.Name.Contains("Bench"))
-                    .ToListAsync();
-
-                return products;
+                var productDetails = await _productService.GetProductDetailsAsync(parentId);
+                foreach (var prod in productDetails)
+                {
+                    if (prod.ParentGroupedProductId != 0) { 
+                        prod.ProductAttributes = _productService.GetProductAttributesAsync(prod.Id).Result;
+                        prod.ProductSpecificationAttributeOptions = _productService.GetProductSpecificationAsync(prod.ProductId).Result;
+                    }
+                   
+                }
+                return productDetails;
             }
             catch (Exception ex)
             {

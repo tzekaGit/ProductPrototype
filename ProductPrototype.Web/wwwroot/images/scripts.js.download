@@ -1,0 +1,77 @@
+function askAbout () 
+{
+var subj = "Ask About - " + document.title;
+var body = "My question refers to: " +  document.URL;
+var mailto_link = 'mailto:sales@belson.com?subject=' + subj + '&body=' + body;
+location.href = mailto_link;
+}
+
+function buyingguide(h,t)
+{
+    window.open(appPath + '/BuyingGuide.aspx?H=' + h + '&T=' + t + '', '', 'toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function closerlook(i,t)
+{
+    window.open(appPath + '/CloserLook.aspx?I='+i+'&T='+t+'','','toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function promotion(i,t)
+{
+    window.open(appPath + '/Promotion.aspx?I='+i+'&T='+t+'','','toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function promotionsc(i,t,p)
+{
+    window.open(appPath + '/Promotion-SC.aspx?I=' + i + '&T=' + t + '', '', 'toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function video(v,t,w,h)
+{
+    window.open(HttpPath + '/Video.aspx?V=' + v + '&T=' + t + '&W=' + w + '&H=' + h + '', '', 'toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function xImage(l,t,w,h)
+{
+    window.open(appPath + '/XImage.aspx?L=' + l + '&T=' + t + '&W=' + w + '&H=' + h + '', '', 'toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function frame(l,t)
+{
+    window.open(appPath + '/Frame.aspx?L=' + l + '&T=' + t + '', '', 'toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function specs(f,t)
+{
+    window.open(appPath + '/Specifications.aspx?F=' + f + '&T=' + t + '', '', 'toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function gallery(mn)
+{
+    window.open(appPath + '/Gallery.aspx?M=' + mn + '', '', 'toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function views(mn)
+{
+    window.open(appPath + '/Views.aspx?M=' + mn + '', '', 'toolbar=0,menubar=0,resizable=1,width=1024,height=655,scrollbars=0,scroll=0')
+}
+
+function DisplayImage(picURL,picWidth,picHeight,picTitle)
+{
+newWindow=window.open(picURL,'newWin','toolbar=no,status=no,width='+picWidth+',height='+picHeight+',')
+newWindow.document.write('<html lang="en-US" dir="ltr"><head><title>'+picTitle+' -  Belson Outdoors, LLC</title></head><body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0"><img src="'+picURL+'"></body></html>');
+newWindow.document.close()
+}
+
+function DisplayPage(pageURL,pageWidth,pageHeight)
+{
+newWindow=window.open(pageURL,'newWin','toolbar=no,status=no,scrollbars=yes,width='+pageWidth+',height='+pageHeight+',')
+newWindow.document.close()
+}
+
+function setFocus(obj) {
+    if (keycode == 13) {
+
+        $(obj).focus();
+    }
+}
