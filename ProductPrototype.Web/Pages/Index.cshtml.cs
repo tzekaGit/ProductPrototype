@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using ProductPrototype.DbAccess;
 using ProductPrototype.DbAccess.Data.ModelDto;
-using ProductPrototype.DbAccess.Data.Models;
 
 namespace ProductPrototype.Pages;
 
@@ -10,17 +9,20 @@ public class IndexModel : PageModel
     public List<ProductDetailDto> ProductDetails { get; set; }
 
     private readonly GetDataFromDb _getDataFromDb;
-    public IndexModel(GetDataFromDb getDataFromDb)
+
+    private readonly HtmlProductExtractor _htmlProductExtractor;
+    public IndexModel(GetDataFromDb getDataFromDb, HtmlProductExtractor htmlProductExtractor)
     {
         _getDataFromDb = getDataFromDb;
+        _htmlProductExtractor = htmlProductExtractor;
     }
 
     public async Task OnGetAsync()
     {
-        var parentid = 48;
-       var productDetails = await _getDataFromDb.GetProductsAsync(parentid);
+        var parentid = 4;
+        //await  _htmlProductExtractor.ExtractAllProductsFromHtmlAsync(parentid);
 
-
+        var productDetails = await _getDataFromDb.GetProductsAsync(parentid);
         ProductDetails = productDetails;
 
         Console.WriteLine("✅ Extraction complete!");

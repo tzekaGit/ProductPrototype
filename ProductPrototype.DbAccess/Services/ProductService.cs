@@ -6,12 +6,12 @@ using ProductPrototype.DbAccess.Interfaces;
 
 namespace ProductPrototype.DbAccess.Services;
 
-internal class ProductService : IProductService
+public class ProductService : IProductService
 // This is in your Data Access Library
 {
     private readonly RepositoryContext _context;
 
-    // The context is injected via Dependency Injection
+    // The _context is injected via Dependency Injection
     public ProductService(RepositoryContext context)
     {
         _context = context;
@@ -90,7 +90,7 @@ internal class ProductService : IProductService
 
         return productAttributes;
     }
-    public async Task<List<SpecificationAttributeOptionDto>> GetProductSpecificationAsync(int productId)
+    public async Task<List<SpecificationAttributeOptionDto>> GetProductSpecificationsAsync(int productId)
     {
         var productSpecifications = await (from product in _context.Products
                                                // Inner Join setup
@@ -98,7 +98,7 @@ internal class ProductService : IProductService
                                         join spcOpt in _context.SpecificationAttributeOptions on mapping.SpecificationAttributeOptionId equals spcOpt.Id
                                         join spec in _context.SpecificationAttributes on spcOpt.SpecificationAttributeId equals spec.Id
                                         join specGr in _context.SpecificationAttributeGroups on spec.SpecificationAttributeGroupId equals specGr.Id
-                                        where product.Id == productId && specGr.Name == "DataColumn1"
+                                        where product.Id == productId && specGr.Name == "TableColumn1"
                                         orderby spcOpt.DisplayOrder ascending
 
                                            // Project the results into a clean DTO
@@ -110,9 +110,14 @@ internal class ProductService : IProductService
                                                 SpecificationKey = specGr.Name
                                         
                                             })
-
-                                     .ToListAsync(); // Executes the query and returns the results
+                                            .Distinct()
+                                            .ToListAsync(); // Executes the query and returns the results
 
         return productSpecifications;
+    }
+
+    public async Task<List<RelatedProduct>> GetRelatedProductsAsync(int ProductId)
+    {
+        return  _context.RelatedProducts.Select(p => p).Where(filter=> filter.ProductId1 == ProductId).ToList();
     }
 }

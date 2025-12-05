@@ -28,10 +28,11 @@ public class GetDataFromDb : IGetDataFromDb
                 {
                     if (prod.ParentGroupedProductId != 0) { 
                         prod.ProductAttributes = _productService.GetProductAttributesAsync(prod.Id).Result;
-                        prod.ProductSpecificationAttributeOptions = _productService.GetProductSpecificationAsync(prod.ProductId).Result;
+                        prod.ProductSpecificationAttributeOptions = _productService.GetProductSpecificationsAsync(prod.ProductId).Result;
+                        prod.RelatedProducts = await _productService.GetRelatedProductsAsync(prod.Id);
                     }
-                   
                 }
+                
                 return productDetails;
             }
             catch (Exception ex)

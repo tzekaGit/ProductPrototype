@@ -5,17 +5,18 @@
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
+
     var productInfo = Model.ProductDetails.Where(prod => prod.ParentGroupedProductId == 0)
                                           .FirstOrDefault();
 
     string fullDescription = string.Empty;
 
 
-    fullDescription = (productInfo?.FullDescription
-                      .Replace("{Short-Description}", productInfo.ShortDescription)
+    fullDescription = Html.Raw(productInfo?.FullDescription
+                      .Replace("{short-description}", productInfo.ShortDescription)
                       .Replace("{product-header-title}", productInfo.Name)) + "";
 
-    List<ProductAttributeValue> productAttributeValues = (List<ProductAttributeValue>)default;
+    List<ProductAttributeValue> productAttributeValues = default;
     if (Model.ProductDetails?.Count()>1){
         productAttributeValues = Model.ProductDetails?[1]
                                       .ProductAttributes?[0]
@@ -314,25 +315,32 @@
 
 
 @section Scripts {
+    <script>
+        const $table = $("#productTable");
+        const $dimension = $(".dimT");
+        const $tbody = $("#productTable tbody");
+        const tableData = @Json.Serialize(variants);
+         let index = 0;
+    </script>
+
     <script src="~/js/buildproducttable.js"></script>
     <script src="~/js/templates.js"></script>
     <script src="~/js/product-colors.js"></script>
   
     <script>
         let productAttributeValues = @Json.Serialize(productAttributeValues);
+
         // Execute the rendering function when the page is ready
         $(document).ready(function () {
-            const $table = $("#productTable");
-            const $dimension = $(".dimT");
+      
             let dimensionGroup = {};
+            let productLength = "";
 
-            const tableData = @Json.Serialize(variants);
-                
-                tableData.forEach((prod, index) => 
+                tableData.forEach((prod) => 
                 {
                     if(prod.parentGroupedProductId==0)
                     {
-                    let headerData =
+                      let headerData =
                         {
                             name: prod.name,
                             length: prod.specificationOptionName
@@ -359,10 +367,11 @@
                                 };
                                 dimensionGroup[type].push(productData);
                                 const productDimensionsHtml = dimensions_template.replace(/{(\w+)}/g, (match, key) => productData[key] ?? match);
-                                $dimension.append(productDimensionsHtml);
+                                $dimension.after(productDimensionsHtml);
                             }
-                         $table.append(buildVariantRow(prod, index));
+                         $table.append(buildTableBody(prod));
                       }
+                 
                 });
 
                 

@@ -9,6 +9,7 @@ public class ProductDetailDto: Product
     public int SpecificationOptionId { get; set; }
     public string? SpecificationOptionName { get; set; }
     public bool IsRequired { get; set; }
+    public List<RelatedProduct>? RelatedProducts { get; set; }
     public List<ProductAttributeDto>? ProductAttributes {get; set;}
     public List<SpecificationAttributeOptionDto>? ProductSpecificationAttributeOptions { get; set; }
 }
