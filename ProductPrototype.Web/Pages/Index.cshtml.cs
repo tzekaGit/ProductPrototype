@@ -20,10 +20,10 @@ public class IndexModel : PageModel
     public async Task OnGetAsync()
     {
         var parentid = 4;
-        //await  _htmlProductExtractor.ExtractAllProductsFromHtmlAsync(parentid);
+        await  _htmlProductExtractor.ExtractAllProductsFromHtmlAsync();
 
         var productDetails = await _getDataFromDb.GetProductsAsync(parentid);
-        ProductDetails = productDetails;
+       ProductDetails = productDetails;
 
         Console.WriteLine("✅ Extraction complete!");
     }

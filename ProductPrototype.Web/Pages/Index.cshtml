@@ -335,16 +335,26 @@
       
             let dimensionGroup = {};
             let productLength = "";
-
+            let modelIndex = 1;
                 tableData.forEach((prod) => 
                 {
                     if(prod.parentGroupedProductId==0)
                     {
-                      let headerData =
-                        {
-                            name: prod.name,
-                            length: prod.specificationOptionName
-                        };
+                       var prodHeader = prod.specificationOptionName.split("|");
+                       let headerData = null;
+                       if(prodHeader.length > 1)
+                           headerData =
+                            {
+                                name1: prodHeader[0],
+                                name2: prodHeader[1]
+                            };
+                        else
+                          headerData =
+                            {
+                                name1: prod.specificationOptionName,
+                                name2: ""
+                            };
+                        
                         const productHeaderHtml = benchHeader_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
                         $tbody.append(productHeaderHtml);
                     }
@@ -363,7 +373,7 @@
                                     length: prod.length,
                                     width: prod.width,
                                     height: prod.height,
-                                    specificationOptionName:prod.specificationOptionName
+                                    specificationOptionName:"Model " + modelIndex++
                                 };
                                 dimensionGroup[type].push(productData);
                                 const productDimensionsHtml = dimensions_template.replace(/{(\w+)}/g, (match, key) => productData[key] ?? match);

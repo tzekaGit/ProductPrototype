@@ -1,6 +1,6 @@
 ﻿const benchHeader_Template = `
     <tr style="background: url('/images/park-bench/pbExpanded2.jpg')">
-       <td class="item" colspan="6" class = "ptExpanded2"><h2 class="px13"> {name} | <span class="cffff00">{length}</span></h2></td>
+       <td class="item" colspan="6" class = "ptExpanded2"><h2 class="px13"> {name1} | <span class="cffff00">{name2}</span></h2></td>
        <td class="qty">Qty</td>
     </tr>
 `;

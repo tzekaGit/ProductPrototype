@@ -1,12 +1,8 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
-using NetTopologySuite.Algorithm;
-using NetTopologySuite.Geometries;
 using ProductPrototype.DbAccess.Data.Models;
-using System.ComponentModel;
 using System.Data;
 using System.Globalization;
-using System.Net;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using File = System.IO.File;
@@ -31,7 +27,7 @@ public enum SpecificationTypes
 
 public class Dimension()
 {
-    public string  SpecificationOptionKey { get; set; }
+    public string SpecificationOptionKey { get; set; }
     public decimal Length { get; set; }
     public decimal Width { get; set; }
     public decimal Height { get; set; }
@@ -97,22 +93,26 @@ public class HtmlProductExtractor
     private int lastPictureId = 0;
     private int lastPictureMappingId = 0;
     private Product lastParentProduct = default;
-
+    private string ProductSku = string.Empty;
     private readonly RepositoryContext _context;
     public HtmlProductExtractor(RepositoryContext context)
     {
         _context = context;
     }
 
-    public async Task ExtractAllProductsFromHtmlAsync(int parentid)
+    public async Task ExtractAllProductsFromHtmlAsync()
     {
         string htmlContent = string.Empty;
-
+        
         //var url = "https://www.belson.com/Grosfillex-Nautical-Sling-Chaise-Lounge";
         //var url = "https://www.belson.com/UpLift-Bike-Rack";
         //var url = "https://www.belson.com/32-Gallon-Steel-Trash-Receptacle-with-Diamond-Pattern";
-        //var url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel";
-        var url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel";
+        //var url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good
+
+        //var url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //good
+        var url = "https://www.belson.com/E-Series-Steel-Picnic-Table-Rectangular";
+        ProductSku = "E-Series-Steel-Picnic-Table-Rectangular";
+        //var url = "https://www.belson.com/Classic-Style-Park-Bench-with-Diamond-Pattern-Steel";
         //var url = "https://www.belson.com/Coated-Steel-MOD-Benches-without-Back-Slatted-Steel";
         htmlContent = GetHtmlFromUrlAsync(url).Result;
 
@@ -589,7 +589,7 @@ public class HtmlProductExtractor
     {
         // Parent product
 
-        if (lastProductId == 0) lastProductId = lastDbProductId;
+     
 
         var productNode = doc.DocumentNode
                              .SelectSingleNode("//div[@id='product']");
@@ -602,7 +602,7 @@ public class HtmlProductExtractor
 
         // Select all tables relevant to products/variants/associated products
         var allTables = doc.DocumentNode
-                           .SelectNodes("//table[contains(@class,'ptExpanded2') or contains(@class,'description') or contains(@class,'descriptionBorder1') or contains(@class,'ptConcrete') or contains(@class,'ptPool') or contains(@class,'ptSale') or contains(@class,'ptBenches') ]")
+                           .SelectNodes("//table[contains(@class,'ptExpanded2') or contains(@class,'ptRecycled')  or  contains(@class,'ptPicnic')  or contains(@class,'description') or contains(@class,'descriptionBorder1') or contains(@class,'ptConcrete') or contains(@class,'ptPool') or contains(@class,'ptSale') or contains(@class,'ptBenches') ]")
                           ?.ToList();
 
         if (allTables == null || allTables.Count == 0)
@@ -614,11 +614,14 @@ public class HtmlProductExtractor
 
         int i = 0;
         Product variant = default;
+        bool isTableHeader = false;
         foreach (var table in allTables)
         {
-            if (table.HasClass("ptExpanded2"))
+            if (table.HasClass("ptExpanded2") || table.HasClass("ptRecycled") || table.HasClass("ptPicnic"))
             {
-                attrOption = table.SelectSingleNode(".//span").InnerText;
+                attrOption = table.SelectSingleNode(".//td").InnerText;
+                isTableHeader = true;
+                continue;
             }
 
             // Variant product
@@ -626,15 +629,17 @@ public class HtmlProductExtractor
             var xpathQuery = ".//self::table[contains(@class, 'description')]";
             if (table.SelectSingleNode(xpathQuery) != null)
             {
+                int columnCount = table.SelectNodes("./tr[1]/td | ./tr[1]/th")
+                                      ?.Count ?? 0;
 
-                if (table.SelectSingleNode(".//td[contains(@class,'ocModel')]") == null)
+                if (columnCount >= 6)
                 {
                     variant = ExtractProduct(table, i);
                     ExtractProductSpecificationMappings(specName, attrOption, variant);
-                   // Assign product picture
-                   GetPropertiesFromHtml(productNode, ref variant, "class/img", "leftR");
+                    // Assign product picture
+                    GetPropertiesFromHtml(productNode, ref variant, "class/img", "leftL,leftR");
                 }
-                else
+                else if (!(table.InnerHtml.Contains("Custom Lettering") || table.InnerHtml.Contains("Custom Custom Message") || table.InnerHtml.Contains("L2000")))
                 {
                     // skip next element since it’s the associated product
                     var assoc = ExtractProduct(table, i, isAssociated: true);
@@ -724,51 +729,62 @@ public class HtmlProductExtractor
     // 3️⃣ Serialize to JSON
     private Product ExtractParentProduct(HtmlNode element)
     {
-        lastProductId = (lastProductId == 0) ? lastDbProductId + 1 : lastProductId + 1;
-        Product product = new Product { Id = lastProductId, ParentGroupedProductId = 10, Published = true };
-        //get parent Produt Name
-        GetPropertiesFromHtml(element, ref product, "h1", "h1");
 
-        //get parent Full description
-        GetPropertiesFromHtml(element, ref product, "class", "wrapper");
-
-        //get parent image
-        GetPropertiesFromHtml(element, ref product, "class/img", "leftR");
-
-        //get products dimensions
-        GetPropertiesFromHtml(element, ref product, "div/class", "dim");
-
-        //get parent short description
-        GetPropertiesFromHtml(element, ref product, "class", "rightR");
-
-        //get parent Full description
-        GetPropertiesFromHtml(element, ref product, "id", "product");
-     
+        Product product = default;
 
         // Find matching attribute
-        var prod = products.FirstOrDefault(a => a.Sku.Equals("Park-Bench-01" + lastProductId, StringComparison.OrdinalIgnoreCase));
-        prod ??= _context.Products.FirstOrDefault(a => a.Sku.ToLower().Equals("Park-Bench-01".ToLower() + lastProductId));
+        var prod = products.FirstOrDefault(a => a.Sku.Equals(ProductSku, StringComparison.OrdinalIgnoreCase));
+        prod ??= _context.Products.FirstOrDefault(a => a.Sku.ToLower().Equals(ProductSku.ToLower()));
         if (prod == null)
         {
-            product.Sku = "Park-Bench-" + product.Id; // Parent may not have SKU
+            lastProductId = (lastProductId == 0 ? lastDbProductId : lastProductId) + 1;
+            product = new Product { Id = lastProductId, ParentGroupedProductId = 10, Published = true };
+            //get parent Produt Name
+            GetPropertiesFromHtml(element, ref product, "h1", "h1");
+
+            //get products dimensions
+            GetPropertiesFromHtml(element, ref product, "div/class", "dim");
+
+            //get parent image
+            GetPropertiesFromHtml(element, ref product, "class/img", "leftL,leftR");
+
+            //get parent Full description
+            GetPropertiesFromHtml(element, ref product, "class", "wrapper");
+
+            //get parent short description
+            GetPropertiesFromHtml(element, ref product, "class", "rightR");
+
+            //get parent Full description
+            GetPropertiesFromHtml(element, ref product, "id", "product");
+
+            product.Sku = ProductSku; // Parent may not have SKU
             product.ParentGroupedProductId = 0; // Top-level
             product.ProductTypeId = 10; // Group Parent
             product.DisplayOrder = 0; // Optional: set if needed
             product.CreatedOnUtc = DateTime.UtcNow;
             products.Add(product);
+            lastParentProduct = product;
+        }
+        else
+        {
+            product = prod;
+            lastParentProduct = prod;
         }
 
 
-        var specName = SpecificationTypes.ProductGrouping1.ToString();
+            var specName = SpecificationTypes.ProductGrouping1.ToString();
         var groupName = SpecificationTypes.ProductGrouping1.ToString();
 
-        var tables = element.SelectNodes("//table[contains(@class,'ptExpanded2')]");
+        var tables = element.SelectNodes("//table[contains(@class,'ptExpanded2') or contains(@class,'ptRecycled') or  contains(@class, 'ptPicnic')]");
         foreach (var table in tables)
         {
-            var attrOption = table.SelectSingleNode(".//span").InnerText;
-            ExtractProductSpecificationMappings(specName, attrOption, product);
+            var attrOption = table.SelectSingleNode(".//td")?.InnerText;
+            if (attrOption != null)
+            {
+                ExtractProductSpecificationMappings(specName, attrOption, product);
+            }
         }
-        lastParentProduct = product;
+       
         return product;
     }
 
@@ -801,39 +817,57 @@ public class HtmlProductExtractor
                 break;
 
             case "class/img":
-                elementNode = element.SelectSingleNode("//div[@class ='" + selectVal + "']");
+                if (selectVal.IndexOf("leftL") > 0 || selectVal.IndexOf("leftR") > 0)
+                {
+                    elementNode = element.SelectSingleNode("//div[@class ='leftL']");
+                    elementNode ??= element.SelectSingleNode("//div[@class ='leftR']");
+                }
+
                 var imgNode = elementNode.SelectSingleNode(".//img");
                 if (imgNode != null)
                 {
                     var imgDocTag = new HtmlDocument();
                     imgDocTag.LoadHtml(imgNode.OuterHtml);
                     var productImage = imgDocTag.DocumentNode.Descendants("img").FirstOrDefault();
-                    string imgSource = productImage.GetAttributeValue("src", string.Empty);
+                    string imgSource = productImage.GetAttributeValue("src", string.Empty).Trim();
 
                     // Parse length as decimal if needed, else keep as string
                     string imgText = imgNode.InnerText.Trim().Replace("'", "").Replace("’", "");
 
-                    lastPictureId = (lastPictureId == 0) ? lastDbPictureId + 1 : lastPictureId + 1;
 
-                    var picture = new Picture
-                    {
-                        Id = lastPictureId,
-                        MimeType = "image/jpeg",
-                        SeoFilename = imgSource,
-                        IsNew = false,
-                    };
-                    pictures.Add(picture);
+                    var picExists = pictures.Any(pic => pic.SeoFilename == imgSource) == false ?
+                                    _context.Pictures.Any(pic => pic.SeoFilename == imgSource) :
+                                    false;
+ 
+                    if (!picExists) {
+                        lastPictureId = (lastPictureId == 0) ? lastDbPictureId + 1 : lastPictureId + 1;
+                        var picture = new Picture
+                        {
+                            Id = lastPictureId,
+                            MimeType = "image/jpeg",
+                            SeoFilename = imgSource,
+                            IsNew = false,
+                        };
+                        pictures.Add(picture);
+                   
+                        var productId = product.Id;
+                        var ProductPictureMapping = productPictureMappings
+                                                                .FirstOrDefault(pic => pic.ProductId == productId && pic.PictureId == picture?.Id);
 
-                    lastPictureMappingId = (lastPictureMappingId == 0) ? lastDbPictureMappingId + 1 : lastPictureMappingId + 1;
-                    var ProductPictureMapping = new ProductPictureMapping
-                    {
-                        Id = lastPictureMappingId,
-                        ProductId = product.Id,
-                        PictureId = picture.Id,
-                        DisplayOrder = 0,
-                    };
-                    productPictureMappings.Add(ProductPictureMapping);
-
+                        ProductPictureMapping ??= productPictureMappings
+                                                              .FirstOrDefault(pic => pic.ProductId == productId && pic.PictureId == picture?.Id);
+                        if (ProductPictureMapping == null)
+                        {
+                            lastPictureMappingId = (lastPictureMappingId == 0 ? lastDbPictureMappingId  : lastPictureMappingId) + 1;
+                            productPictureMappings.Add(new ProductPictureMapping
+                            {
+                                Id = lastPictureMappingId,
+                                ProductId = product.Id,
+                                PictureId = picture.Id,
+                                DisplayOrder = 0,
+                            });
+                        }
+                    }
                 }
                 break;
 
@@ -876,8 +910,7 @@ public class HtmlProductExtractor
                 {
                     if (el.HasClass("dimT")) continue;
 
-                    ExtractWholePartsSimplified(el.InnerText);
-               
+                    //ExtractWholePartsSimplified(el.InnerText);
 
                     el.Remove();
                 }
@@ -890,7 +923,7 @@ public class HtmlProductExtractor
 
     private Product ExtractProduct(HtmlNode table, int displayOrder, bool isAssociated = false)
     {
-        
+
         if (lastParentProduct == null)
         {
             throw new Exception("Parent Product is missing");
@@ -922,7 +955,7 @@ public class HtmlProductExtractor
 
             product = new Product
             {
-                ParentGroupedProductId = isAssociated? 0: lastParentProduct.Id,
+                ParentGroupedProductId = isAssociated ? 0 : lastParentProduct.Id,
                 Id = lastProductId,
                 Sku = productSku,
                 Name = lastParentProduct.Name + "-" + productSku,
@@ -967,8 +1000,8 @@ public class HtmlProductExtractor
 
         if (isAssociated)
         {
-           return  ExtractAssociatedProducts(table, product);
-           
+            return ExtractAssociatedProducts(table, product);
+
         }
         var row = table.SelectSingleNode(".//tr");
         if (product.Sku == "942S-V8")
@@ -985,6 +1018,7 @@ public class HtmlProductExtractor
             specName = cells[1].InnerText;
             var prodSpecMappings = ExtractProductSpecificationMappings(SpecificationTypes.TableColumn1.ToString(), specName, product);
         }
+        product.ProductTemplateId
         return product;
     }
 
@@ -1063,7 +1097,7 @@ public class HtmlProductExtractor
     private void CreateGroupingSpecifications(string groupName, string specName, HtmlDocument doc)
     {
         var allTables = doc.DocumentNode
-            .SelectNodes("//table[contains(@class,'ptExpanded2')]")
+            .SelectNodes("//table[contains(@class,'ptExpanded2') or contains(@class,'ptRecycled') or contains(@class,'ptPicnic')   ]")
             .ToList();
 
         if (allTables == null)
@@ -1073,9 +1107,9 @@ public class HtmlProductExtractor
 
         foreach (var table in allTables)
         {
-            if (table.HasClass("ptExpanded2"))
+            if (table.HasClass("ptExpanded2") || table.HasClass("ptRecycled") || table.HasClass("ptPicnic"))
             {
-                var specOption = table.SelectSingleNode(".//span");
+                var specOption = table.SelectSingleNode(".//td");
 
                 if (specOption != null)
                 {
@@ -1353,14 +1387,11 @@ public class HtmlProductExtractor
         {
             ProductSpecificationAttributeMapping specMapp = default;
 
-            specMapp = productSpecificationAttributeMappings.OrderByDescending(spec => spec.DisplayOrder)
-                                    .FirstOrDefault(opt => opt.ProductId == product.Id && opt.Id == option.Id);
+            bool specMappExists = !productSpecificationAttributeMappings.Any(opt => opt.ProductId == product.Id && opt.SpecificationAttributeOptionId == option.Id) ?
+                                  _context.ProductSpecificationAttributeMappings.Any(opt => opt.ProductId == product.Id && opt.SpecificationAttributeOptionId == option.Id) :
+                                  false;
 
-            specMapp ??= _context.ProductSpecificationAttributeMappings.OrderByDescending(spec => spec.DisplayOrder)
-                                .FirstOrDefault(opt => opt.ProductId == product.Id && opt.Id == option.Id);
-
-
-            if (specMapp == null)
+            if (!specMappExists)
             {
                 lastProductSpecificationAttributeMappingId = (lastProductSpecificationAttributeMappingId == 0 ? lastDbProductSpecificationAttributeMappingId : lastProductSpecificationAttributeMappingId) + 1;
                 lastSpecificationAttributeMappingDisplayOrder++;
@@ -1372,7 +1403,7 @@ public class HtmlProductExtractor
                     SpecificationAttributeOptionId = option.Id,
                     DisplayOrder = lastSpecificationAttributeMappingDisplayOrder
                 });
-              
+
             }
         }
 
@@ -1384,44 +1415,44 @@ public class HtmlProductExtractor
         // ----------------------------
         // ASSOCIATED PRODUCT TABLE (descriptionBorder1)
         // ----------------------------
-            var assocRows = assocTable.SelectNodes(".//tr");
-            if (assocRows != null)
+        var assocRows = assocTable.SelectNodes(".//tr");
+        if (assocRows != null)
+        {
+            foreach (var row in assocRows)
             {
-                foreach (var row in assocRows)
+                var assocSku = row.SelectSingleNode(".//td[contains(@class,'ocModel')]")?.InnerText.Trim();
+                var assocDetail = row.SelectSingleNode(".//td[contains(@class,'ocDetail')]")?.InnerText.Trim();
+
+                // Extract bold section (<b>Optional Covers</b>)
+                var nameNode = row.SelectSingleNode(".//td[contains(@class,'ocDetail')]/b");
+                var attrName = nameNode?.InnerText.Trim() ?? "";
+
+                // Extract description (text after the <b>...</b>)
+                var descText = assocDetail?.Replace(attrName, "").Trim();
+                int index = descText.IndexOf('$');
+
+                if (index > -1)
+                    descText = descText.Substring(0, index); // remove leading dash
+
+                // Extract price (like "$44/each")
+                decimal assocPrice = 0;
+                string priceValue = "";
+                string priceUnit = "";
+                var priceMatch = Regex.Match(assocDetail ?? "", @"\$(\d+(\.\d+)?)(?:\/(\w+))?");
+                if (priceMatch.Success)
                 {
-                    var assocSku = row.SelectSingleNode(".//td[contains(@class,'ocModel')]")?.InnerText.Trim();
-                    var assocDetail = row.SelectSingleNode(".//td[contains(@class,'ocDetail')]")?.InnerText.Trim();
+                    priceValue = priceMatch.Groups[1].Value;
+                    priceUnit = priceMatch.Groups[3].Success ? priceMatch.Groups[3].Value : "";
+                    assocPrice = decimal.Parse(priceMatch.Groups[1].Value, CultureInfo.InvariantCulture);
+                }
 
-                    // Extract bold section (<b>Optional Covers</b>)
-                    var nameNode = row.SelectSingleNode(".//td[contains(@class,'ocDetail')]/b");
-                    var attrName = nameNode?.InnerText.Trim() ?? "";
+                // Extract Yes/No inputs
+                var inputs = row.SelectNodes(".//span[@class='rtx']");
+                var inputValues = inputs?.Select(x => x.InnerText.Trim()).ToList() ?? new List<string> { "Yes", "No" };
 
-                    // Extract description (text after the <b>...</b>)
-                    var descText = assocDetail?.Replace(attrName, "").Trim();
-                    int index = descText.IndexOf('$');
-
-                    if (index > -1)
-                        descText = descText.Substring(0, index); // remove leading dash
-
-                    // Extract price (like "$44/each")
-                    decimal assocPrice = 0;
-                    string priceValue = "";
-                    string priceUnit = "";
-                    var priceMatch = Regex.Match(assocDetail ?? "", @"\$(\d+(\.\d+)?)(?:\/(\w+))?");
-                    if (priceMatch.Success)
-                    {
-                        priceValue = priceMatch.Groups[1].Value;
-                        priceUnit = priceMatch.Groups[3].Success ? priceMatch.Groups[3].Value : "";
-                        assocPrice = decimal.Parse(priceMatch.Groups[1].Value, CultureInfo.InvariantCulture);
-                    }
-
-                    // Extract Yes/No inputs
-                    var inputs = row.SelectNodes(".//span[@class='rtx']");
-                    var inputValues = inputs?.Select(x => x.InnerText.Trim()).ToList() ?? new List<string> { "Yes", "No" };
-
-                    // Add to combinations list
-                    product.Sku = assocSku;
-                    product.Price = assocPrice;
+                // Add to combinations list
+                product.Sku = assocSku;
+                product.Price = assocPrice;
             }
         }
         return product;
@@ -1470,7 +1501,8 @@ public class HtmlProductExtractor
         // --- 2. Extract and Clean Each Part ---
 
         // Part 1: "72"L"
-        string lengthStr = dimension[0].Replace("&quot;L", "");
+        string lengthStr = dimension[0].Replace("&quot;L", "")
+                                       .Replace("'L", "");
         decimal length = decimal.Parse(lengthStr);
 
         // Part 2: "22"W"
@@ -1495,7 +1527,7 @@ public class HtmlProductExtractor
         //    Width = width,
         //    Height = height
         //});
-    
+
     }
 
     public async Task UpdateDbAsync<TEntity>(string sqlTableName, List<TEntity> entitiesToProcess, bool exists = false) where TEntity : class

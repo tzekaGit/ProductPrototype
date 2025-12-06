@@ -2,7 +2,6 @@
     if (productAttributeValues == null) return;
     const $container = $('#spheresContainer');
 
-    debugger;
     // Group options by type
     const groups = {};
 
@@ -13,9 +12,17 @@
             const val = attr.name;
             if (!val) return;
             const parts = val.split('|');
-            if (parts.length < 2) return;
-            const type = parts[0].trim();
-            const colorName = parts[1].trim().toLowerCase().replace(/\s+/g, '-');
+            let type = "";
+            let colorName = "";
+            if (parts.length < 2) {
+                type = "color";
+                colorName = parts[0].trim().toLowerCase().replace(/\s+/g, '-');
+            }
+            else
+            { 
+                type = parts[0].trim();
+                colorName = parts[1].trim().toLowerCase().replace(/\s+/g, '-');
+            }
             if (!groups[type]) groups[type] = [];
             groups[type].push({ name: colorName });
         });
