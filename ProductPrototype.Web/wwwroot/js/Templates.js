@@ -1,5 +1,5 @@
-﻿const benchHeader_Template = `
-    <tr style="background: url('/images/park-bench/pbExpanded2.jpg')">
+﻿const ProductGroupHeader_Template = `
+    <tr style="background: url('{bgImg}')">
        <td class="item" colspan="6" class = "ptExpanded2"><h2 class="px13"> {name1} | <span class="cffff00">{name2}</span></h2></td>
        <td class="qty">Qty</td>
     </tr>
@@ -17,6 +17,16 @@ const benchProductColumns = `
         <th>QTY</th>
     </tr>
 </thead>
+`;
+const six_Column_Template = `
+      <tr  style="{style}">
+        <td class="model85"><a href="javascript:gallery('{sku}')">{sku}</a></td>
+        <td class="detail110">{specification}</td>
+        <td class="detail120" id="seatColor"><select size="1" name="AN{i}" style="width: 120px;">{seatColors}</select></td>
+        <td class="lbs55">({weight} lbs)</td>
+        <td class="price75">{price}</td>
+        <td class="entry"><input name="QTY{i}" size="2" maxlength="6" style="text-align: center;" class="qty_box" /></td>
+      </tr>
 `;
 
 const seven_Column_Template = `

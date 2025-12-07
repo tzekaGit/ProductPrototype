@@ -351,7 +351,7 @@
 							length: product.specificationOptionName
 						};
 						// Parent row
-						const productHeaderHtml = benchHeader_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
+						const productHeaderHtml = ProductGroupHeader_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
 						$tbody.append(productHeaderHtml);
 					}
 					else

@@ -13,17 +13,22 @@
 
 
     fullDescription = Html.Raw(productInfo?.FullDescription
-                      .Replace("{short-description}", productInfo.ShortDescription)
-                      .Replace("{product-header-title}", productInfo.Name)) + "";
+                      ?.Replace("{short-description}", productInfo.ShortDescription)
+                      ?.Replace("{product-header-title}", productInfo.Name)) + "";
 
     List<ProductAttributeValue> productAttributeValues = default;
     if (Model.ProductDetails?.Count()>1){
-        productAttributeValues = Model.ProductDetails?[1]
-                                      .ProductAttributes?[0]
-                                      .ProductAttributeValues;
+
+        productAttributeValues = Model?.ProductDetails?
+                                 .ElementAtOrDefault(1)? // Safely gets item at index 0
+                                 .ProductAttributes?
+                                 .ElementAtOrDefault(0)? // Safely gets item at index 0 of list2
+                                 .ProductAttributeValues;
+
     }
-    
+
     var variants = Model.ProductDetails;
+    var bgImage = Model.ProductTemplates.TableHeaderBackgroud;
 }
 
 @section Styles {
@@ -346,16 +351,18 @@
                            headerData =
                             {
                                 name1: prodHeader[0],
-                                name2: prodHeader[1]
+                                name2: prodHeader[1],
+                                bgImg: "@bgImage"
                             };
                         else
                           headerData =
                             {
                                 name1: prod.specificationOptionName,
-                                name2: ""
+                                name2: "",
+                                bgImg: "@bgImage"
                             };
                         
-                        const productHeaderHtml = benchHeader_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
+                        const productHeaderHtml = ProductGroupHeader_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
                         $tbody.append(productHeaderHtml);
                     }
                     else

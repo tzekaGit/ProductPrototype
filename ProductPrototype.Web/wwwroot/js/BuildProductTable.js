@@ -1,6 +1,6 @@
 ﻿
 
-function buildVariantRow(variant) {
+function buildVariantRow(variant, hasAssociation) {
 
 	// Seat Color dropdown
 	const seatColors = (variant.productAttributes[0] || []).productAttributeValues || [];
@@ -16,8 +16,6 @@ function buildVariantRow(variant) {
 	//sécifications
 	const specifications = variant.productSpecificationAttributeOptions[0];
 
-	// let rowStyle = hasAssociation == true ? "border-bottom:none" : "";
-
 	const data = {
 		sku: variant.sku || "",
 		specification: specifications ? specifications.specificationName : "",
@@ -26,10 +24,11 @@ function buildVariantRow(variant) {
 		seatColors: seatColorOptions,
 		frameColors: frameColorOptions,
 		style: "",
-		i: index
+		i: index,
+		style: hasAssociation == true ? "border-bottom:none" : ""
 	};
-
-	const html = seven_Column_Template.replace(/{(\w+)}/g, (match, key) => data[key] ?? match);
+	let html = "";
+	html = seven_Column_Template.replace(/{(\w+)}/g, (match, key) => data[key] ?? match);
 	$tbody.append(html);
 }
 
@@ -39,10 +38,10 @@ function buildAssociateRow(assoc) {
 	
 	// Quantity input
 	const data = {
-		sku: assoc.Sku,
+		sku: assoc.sku,
 		name: "Covers",
-		description: "desc",
-		price: formatPrice(assoc.Price) ,
+		description: "2 Covers Required Per Bench - ",
+		price: formatPrice(assoc.price) ,
 		unit: "each",
 		i: index
 	};
@@ -57,7 +56,7 @@ function buildTableBody(variant) {
 			
 	if (hasAssociation) {
 		index++
-		assoc = variant.relatedProducts[0];
+		assoc = variant.relatedProductDetails[0];
 		$tbody.append(buildAssociateRow(assoc, hasAssociation));
 	}
 	index++

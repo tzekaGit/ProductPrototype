@@ -30,6 +30,7 @@ public class GetDataFromDb : IGetDataFromDb
                         prod.ProductAttributes = _productService.GetProductAttributesAsync(prod.Id).Result;
                         prod.ProductSpecificationAttributeOptions = _productService.GetProductSpecificationsAsync(prod.ProductId).Result;
                         prod.RelatedProducts = await _productService.GetRelatedProductsAsync(prod.Id);
+                        prod.RelatedProductDetails = await _productService.GetRelatedProductDetailAsync(prod.Id);
                     }
                 }
                 

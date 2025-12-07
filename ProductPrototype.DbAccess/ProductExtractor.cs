@@ -1,8 +1,11 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
 using ProductPrototype.DbAccess.Data.Models;
+using ProductPrototype.DbAccess.Data.Struct;
+using System;
 using System.Data;
 using System.Globalization;
+using System.Net.Sockets;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using File = System.IO.File;
@@ -24,6 +27,8 @@ public enum SpecificationTypes
     TableColumn1,
     ProductGrouping1,
 }
+
+
 
 public class Dimension()
 {
@@ -95,25 +100,32 @@ public class HtmlProductExtractor
     private Product lastParentProduct = default;
     private string ProductSku = string.Empty;
     private readonly RepositoryContext _context;
+    private ProductTemplates productTemplates = default;
+    private string headerTblCss = string.Empty;
     public HtmlProductExtractor(RepositoryContext context)
     {
         _context = context;
+        productTemplates = new ProductTemplates();
     }
 
     public async Task ExtractAllProductsFromHtmlAsync()
     {
         string htmlContent = string.Empty;
-        
-        //var url = "https://www.belson.com/Grosfillex-Nautical-Sling-Chaise-Lounge";
+
+        //var url = "https://www.belson.com/Grosfillex-Nautical-Sling-Chaise-Lounge"; // ix column tml
         //var url = "https://www.belson.com/UpLift-Bike-Rack";
         //var url = "https://www.belson.com/32-Gallon-Steel-Trash-Receptacle-with-Diamond-Pattern";
-        //var url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good
+        var url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good
 
-        //var url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //good
-        var url = "https://www.belson.com/E-Series-Steel-Picnic-Table-Rectangular";
-        ProductSku = "E-Series-Steel-Picnic-Table-Rectangular";
+       // var url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //good
+        //var url = "https://www.belson.com/E-Series-Steel-Picnic-Table-Rectangular";
+        //var url = "https://www.belson.com/E-Series-Steel-Backless-Bench";  //good
+
         //var url = "https://www.belson.com/Classic-Style-Park-Bench-with-Diamond-Pattern-Steel";
         //var url = "https://www.belson.com/Coated-Steel-MOD-Benches-without-Back-Slatted-Steel";
+
+        ProductSku = url.Replace("https://www.belson.com/", "");
+
         htmlContent = GetHtmlFromUrlAsync(url).Result;
 
         //string filePath = Path.Combine(Environment.CurrentDirectory, @"wwwroot/html/products/Park-Bench.html"); //Park-Bench,Picnic-element,Concrete-Bench"
@@ -596,30 +608,33 @@ public class HtmlProductExtractor
 
         // Select all tables relevant to products/variants/associated products
         var parent = ExtractParentProduct(productNode);
-        lastDbProductDisplayOrder = _context.Products.Where(p => p.ParentGroupedProductId == parent.Id)
+            lastDbProductDisplayOrder = _context.Products.Where(p => p.ParentGroupedProductId == parent.Id)
                                                      .MaxAsync(e => (int?)e.DisplayOrder).Result ?? 0;
 
+        //var pricingTbl = doc.DocumentNode
+        //                   .($"//table(@class,'pricing')/table");
 
         // Select all tables relevant to products/variants/associated products
+   
+        var xpath = $"//div[@id='pricing']/table[not(contains(concat(' ', normalize-space(@class), ' '), ' hiddenModels '))]";
         var allTables = doc.DocumentNode
-                           .SelectNodes("//table[contains(@class,'ptExpanded2') or contains(@class,'ptRecycled')  or  contains(@class,'ptPicnic')  or contains(@class,'description') or contains(@class,'descriptionBorder1') or contains(@class,'ptConcrete') or contains(@class,'ptPool') or contains(@class,'ptSale') or contains(@class,'ptBenches') ]")
+                          .SelectNodes(xpath)
                           ?.ToList();
-
         if (allTables == null || allTables.Count == 0)
             return products;
 
         var specName = SpecificationTypes.ProductGrouping1.ToString();
         var groupName = SpecificationTypes.ProductGrouping1.ToString();
-        string attrOption = "";
+        string specOption = "";
 
         int i = 0;
         Product variant = default;
         bool isTableHeader = false;
         foreach (var table in allTables)
         {
-            if (table.HasClass("ptExpanded2") || table.HasClass("ptRecycled") || table.HasClass("ptPicnic"))
+            if (table.HasClass(headerTblCss))
             {
-                attrOption = table.SelectSingleNode(".//td").InnerText;
+                specOption = table.SelectSingleNode(".//td").InnerText;
                 isTableHeader = true;
                 continue;
             }
@@ -635,7 +650,7 @@ public class HtmlProductExtractor
                 if (columnCount >= 6)
                 {
                     variant = ExtractProduct(table, i);
-                    ExtractProductSpecificationMappings(specName, attrOption, variant);
+                    ExtractProductSpecificationMappings(specName, specOption, variant);
                     // Assign product picture
                     GetPropertiesFromHtml(productNode, ref variant, "class/img", "leftL,leftR");
                 }
@@ -775,7 +790,7 @@ public class HtmlProductExtractor
             var specName = SpecificationTypes.ProductGrouping1.ToString();
         var groupName = SpecificationTypes.ProductGrouping1.ToString();
 
-        var tables = element.SelectNodes("//table[contains(@class,'ptExpanded2') or contains(@class,'ptRecycled') or  contains(@class, 'ptPicnic')]");
+        var tables = element.SelectNodes($"//table[contains(@class,'{headerTblCss}')]");
         foreach (var table in tables)
         {
             var attrOption = table.SelectSingleNode(".//td")?.InnerText;
@@ -819,11 +834,13 @@ public class HtmlProductExtractor
             case "class/img":
                 if (selectVal.IndexOf("leftL") > 0 || selectVal.IndexOf("leftR") > 0)
                 {
-                    elementNode = element.SelectSingleNode("//div[@class ='leftL']");
-                    elementNode ??= element.SelectSingleNode("//div[@class ='leftR']");
+                    elementNode = element.SelectSingleNode(".//div[@class ='leftL']");
+                    elementNode ??= element.SelectSingleNode(".//div[@class ='leftR']");
+                    if (elementNode == null) return;
                 }
 
-                var imgNode = elementNode.SelectSingleNode(".//img");
+                var imgNode = elementNode.SelectSingleNode("..//img");
+                imgNode ??= elementNode.SelectSingleNode("..//img");
                 if (imgNode != null)
                 {
                     var imgDocTag = new HtmlDocument();
@@ -965,50 +982,44 @@ public class HtmlProductExtractor
                 UpdatedOnUtc = DateTime.UtcNow,
                 DisplayOrder = lastDbProductDisplayOrder      // Optional: can set based on element order
             };
-
-            // Weight
-            var weightNode = table.SelectSingleNode(".//td[contains(@class,'lbs')]");
-            if (weightNode != null)
+            if (isAssociated)
             {
-                var weightText = weightNode.InnerText.Replace("&nbsp;", "")
-                                                     .Replace("(", "")
-                                                     .Replace(")", "")
-                                                     .Replace("lbs", "").Trim();
-
-                if (decimal.TryParse(weightText, out decimal w))
-                    product.Weight = w;
+                ExtractAssociatedProducts(table, ref product);
             }
+            else {
+                // Weight
+                var weightNode = table.SelectSingleNode(".//td[contains(@class,'lbs')]");
+                if (weightNode != null)
+                {
+                    var weightText = weightNode.InnerText.Replace("&nbsp;", "")
+                                                         .Replace("(", "")
+                                                         .Replace(")", "")
+                                                         .Replace("lbs", "").Trim();
 
-            // Price
-            var priceNode = table.SelectSingleNode(".//td[contains(@class,'price')]");
-            if (priceNode != null)
-            {
-                var priceText = priceNode.InnerText.Replace("$", "").Trim();
-                if (decimal.TryParse(priceText, out decimal p))
-                    product.Price = p;
+                    if (decimal.TryParse(weightText, out decimal w))
+                        product.Weight = w;
+                }
+
+                // Price
+                var priceNode = table.SelectSingleNode(".//td[contains(@class,'price')]");
+                if (priceNode != null)
+                {
+                    var priceText = priceNode.InnerText.Replace("$", "").Trim();
+                    if (decimal.TryParse(priceText, out decimal p))
+                        product.Price = p;
+                }
+                //var dims = dimensions.FirstOrDefault(dim => dim.SpecificationOptionKey == "key");
+                //if (dims != null)
+                //{
+                //    product.Length = dims.Length;
+                //    product.Width = dims.Width;
+                //    product.Height = dims.Height;
+                //}
             }
-            //var dims = dimensions.FirstOrDefault(dim => dim.SpecificationOptionKey == "key");
-            //if (dims != null)
-            //{
-            //    product.Length = dims.Length;
-            //    product.Width = dims.Width;
-            //    product.Height = dims.Height;
-            //}
-
             products.Add(product);
         }
 
-        if (isAssociated)
-        {
-            return ExtractAssociatedProducts(table, product);
-
-        }
         var row = table.SelectSingleNode(".//tr");
-        if (product.Sku == "942S-V8")
-        {
-            Console.WriteLine();
-        }
-
         var attributValues = ExtractProductAttributeValues(row, product);
 
         var cells = row.SelectNodes("td");
@@ -1018,7 +1029,7 @@ public class HtmlProductExtractor
             specName = cells[1].InnerText;
             var prodSpecMappings = ExtractProductSpecificationMappings(SpecificationTypes.TableColumn1.ToString(), specName, product);
         }
-        product.ProductTemplateId
+        //product.ProductTemplateId
         return product;
     }
 
@@ -1058,47 +1069,57 @@ public class HtmlProductExtractor
 
 
             // Detect <select> dropdowns (Product Attributes)
-            var selects = row.SelectNodes(".//select");
-            if (selects == null) continue;
+            var selects = row.SelectNodes(".//select[not(contains(@name,'QTY'))]");
+            string attributeName = string.Empty;
 
-            foreach (var select in selects)
+            if (selects == null)
             {
-                string selectedLabel = select.SelectSingleNode("option[@selected]")?.InnerText.Trim() ?? "";
-
-                // Unify Seat Color / Frame Color → "Color"
-                string attributeName = selectedLabel.Contains("Choose", StringComparison.OrdinalIgnoreCase) && selectedLabel.Contains("Color", StringComparison.OrdinalIgnoreCase) ? selectedLabel.Replace("Choose ", "").Trim() : selectedLabel;
-                if (string.IsNullOrWhiteSpace(attributeName)) continue;
-
-                // Check if the attr exists
-                var attr = productAttributes
-                                  .FirstOrDefault(a => a.Name == attributeName);
-
-                attr ??= _context.ProductAttributes
-                                   .FirstOrDefault(a => a.Name == attributeName);
-
-
-
-                if (attr == null)
+                CreateHtmlSelecAtttribute("Item Attribute");;
+            }
+            else
+            {
+                foreach (var select in selects)
                 {
-                    lastProductAttributeId = (lastProductAttributeId == 0 ? lastDbProductAttributeId : lastProductAttributeId) + 1;
-                    // Create a new attr
-                    attr = new ProductAttribute { Id = lastProductAttributeId };
-                    attr.Name = attributeName;
-                    productAttributes.Add(attr);
+                    string selectedLabel = select.SelectSingleNode("option[@selected]")?.InnerText.Trim() ?? "";
+                    // Unify Seat Color / Frame Color → "Color"
+                    attributeName = selectedLabel.Contains("Choose", StringComparison.OrdinalIgnoreCase) && selectedLabel.Contains("Color", StringComparison.OrdinalIgnoreCase) ? selectedLabel.Replace("Choose ", "").Trim() : selectedLabel;
+                    if (string.IsNullOrWhiteSpace(attributeName)) continue;
+                    CreateHtmlSelecAtttribute(attributeName);
                 }
-
-
             }
         }
+    }
+
+    private void CreateHtmlSelecAtttribute( string attributeName)
+    {
+        // Check if the attr exists
+        var attr = productAttributes
+                            .FirstOrDefault(a => a.Name == attributeName);
+
+        attr ??= _context.ProductAttributes
+                            .FirstOrDefault(a => a.Name == attributeName);
 
 
+
+        if (attr == null)
+        {
+            lastProductAttributeId = (lastProductAttributeId == 0 ? lastDbProductAttributeId : lastProductAttributeId) + 1;
+            // Create a new attr
+            attr = new ProductAttribute { Id = lastProductAttributeId };
+            attr.Name = attributeName;
+            productAttributes.Add(attr);
+        }
     }
 
     private void CreateGroupingSpecifications(string groupName, string specName, HtmlDocument doc)
     {
-        var allTables = doc.DocumentNode
-            .SelectNodes("//table[contains(@class,'ptExpanded2') or contains(@class,'ptRecycled') or contains(@class,'ptPicnic')   ]")
-            .ToList();
+        var allTables = doc.DocumentNode.SelectNodes("id('pricing')//table");
+
+        headerTblCss = allTables[0].Attributes["class"]?.Value;
+
+        //var allTables = doc.DocumentNode
+        //    .SelectNodes("//table[contains(@class,'" + headerTblCss + "')]")
+        //    ?.ToList();
 
         if (allTables == null)
         {
@@ -1107,7 +1128,7 @@ public class HtmlProductExtractor
 
         foreach (var table in allTables)
         {
-            if (table.HasClass("ptExpanded2") || table.HasClass("ptRecycled") || table.HasClass("ptPicnic"))
+            if (table.HasClass(headerTblCss))
             {
                 var specOption = table.SelectSingleNode(".//td");
 
@@ -1124,9 +1145,13 @@ public class HtmlProductExtractor
                         specGroup = new SpecificationAttributeGroup { Id = lastSpecificationAttributeGroupId, Name = groupName, DisplayOrder = 0 };
                         specificationAttributeGroups.Add(specGroup);
                     }
+                    else
+                    {
+                        lastSpecificationAttributeGroupId = specGroup.Id;
+                    }
 
                     var spec = specificationAttributes
-                              .FirstOrDefault(s => s.Name.Equals(specName, StringComparison.OrdinalIgnoreCase));
+                                  .FirstOrDefault(s => s.Name.Equals(specName, StringComparison.OrdinalIgnoreCase));
 
                     spec ??= _context.SpecificationAttributes.FirstOrDefault(s => s.Name == specName);
 
@@ -1139,16 +1164,21 @@ public class HtmlProductExtractor
 
                         specificationAttributes.Add(spec);
                     }
+                    else
+                    {
+                        lastSpecificationAttributeId = spec.Id;
+                    }
 
 
-                    var specificationAttributeOption = specificationAttributeOptions
-                                                               .FirstOrDefault(attr => attr.Name == specOption.InnerText);
+                        var specificationAttributeOption = specificationAttributeOptions
+                                                                   .FirstOrDefault(attr => attr.Name == specOption.InnerText);
 
                     specificationAttributeOption ??= _context.SpecificationAttributeOptions
                                                                .FirstOrDefault(attr => attr.Name == specOption.InnerText);
 
                     if (specificationAttributeOption == null)
                     {
+                        
                         int displayOrder = specificationAttributeOptions
                                           .Where(attr => attr.SpecificationAttributeId == lastSpecificationAttributeId)
                                           .OrderByDescending(itm => itm.DisplayOrder)
@@ -1165,7 +1195,7 @@ public class HtmlProductExtractor
                         }
 
                         lastSpecificationAttributeOptionId = (lastSpecificationAttributeOptionId == 0 ? lastDbSpecificationAttributeOptionId : lastSpecificationAttributeOptionId) + 1;
-
+                       
                         specificationAttributeOptions.Add(new SpecificationAttributeOption
                         {
                             Id = lastSpecificationAttributeOptionId,
@@ -1230,132 +1260,156 @@ public class HtmlProductExtractor
     private List<ProductAttributeValue> ExtractProductAttributeValues(HtmlNode row, Product product)
     {
         if (row == null) return productAttributeValues;
-
-        var selects = row.SelectNodes(".//select");
-        if (selects == null) return productAttributeValues;
-
-        foreach (var select in selects)
+        var selects = row.SelectNodes(".//select[not(contains(@name,'QTY'))]");
+       
+        if (selects == null)
         {
-            // Get the first option (the "Choose..." placeholder) to determine if this is a color attribute
-            var firstOption = select.SelectSingleNode("option[@selected]");
-            if (firstOption == null) continue;
+            var attrNode = row.SelectNodes(".//td");
+            var attrValue = attrNode[2].InnerText;
+            var attrDoc = new HtmlDocument();
+            var attrSelectNode = attrDoc.CreateElement("select");
+            var attOptionNode = attrDoc.CreateElement("option");
 
-            string firstOptionValue = firstOption.GetAttributeValue("value", "").Trim();
-            string firstOptionText = HtmlEntity.DeEntitize(firstOption.InnerText.Trim());
+            attOptionNode.SetAttributeValue("value", attrValue);
+            attOptionNode.InnerHtml = attrValue;
+            attrSelectNode.AppendChild(attOptionNode);
 
-            // Check if this select is a color attribute by looking for "Choose" + "Color" pattern
-            bool isColorAttribute = firstOptionValue.StartsWith("Choose", StringComparison.OrdinalIgnoreCase) &&
-                                   (firstOptionValue.IndexOf("Color", StringComparison.OrdinalIgnoreCase) >= 0);
-
-            // If it's not a color attribute, skip this entire select and move to next column
-            if (!isColorAttribute)
-                continue;
-
-            // Extract attribute name from the first option
-            string attributeName = firstOptionValue
-                                        .Replace("Choose", "", StringComparison.OrdinalIgnoreCase)
-                                        .Trim();
-
-            // Find matching attribute
-            var attribute = productAttributes
-                              .FirstOrDefault(a => a.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase));
-
-            attribute ??= _context.ProductAttributes
-                                .FirstOrDefault(a => a.Name.ToLower().Equals(attributeName.ToLower()));
-            // If no match found, continue
-            if (attribute == null)
-                continue;
-
-            // Create or reuse product-attribute mapping
-            var mapping = productProductAttributeMappings.FirstOrDefault(m =>
-                                                        m.ProductId == product.Id && m.ProductAttributeId == attribute.Id);
-
-            mapping = _context.ProductProductAttributeMappings.FirstOrDefault(m =>
-                                                             m.ProductId == product.Id && m.ProductAttributeId == attribute.Id);
-
-            if (mapping == null)
+            processAttributeOptions("Item Attribute", product, attrSelectNode);
+        }
+        else
+        {
+            foreach (var select in selects)
             {
-                lastProductProductAttributeMappingId = (lastProductProductAttributeMappingId == 0 ? lastDbProductProductAttributeMappingId : lastProductProductAttributeMappingId) + 1;
-                mapping = new ProductProductAttributeMapping
-                {
-                    Id = lastProductProductAttributeMappingId,
-                    ProductId = product.Id,
-                    ProductAttributeId = attribute.Id,
-                    AttributeControlTypeId = 1
-                };
-                productProductAttributeMappings.Add(mapping);
-            }
+               
+                // Get the first option (the "Choose..." placeholder) to determine if this is a color attribute
+                var firstOption = select.SelectSingleNode("option[@selected]");
+                if (firstOption == null) continue;
 
-            // Extract valid <option> nodes (excluding disabled and the first "Choose" option)
-            var optionNodes = select.SelectNodes("option[not(@selected) and not(@disabled)]");
-            if (optionNodes == null)
-                continue;
+                string firstOptionValue = firstOption.GetAttributeValue("value", "").Trim();
+                string firstOptionText = HtmlEntity.DeEntitize(firstOption.InnerText.Trim());
 
-            int displayOrder = 0;
-            foreach (var opt in optionNodes)
-            {
-                // Extract value attribute
-                string valueAttr = opt.GetAttributeValue("value", "").Trim();
-                string displayText = HtmlEntity.DeEntitize(opt.InnerText.Trim());
+                // Check if this select is a color attribute by looking for "Choose" + "Color" pattern
+                bool isColorAttribute = firstOptionValue.StartsWith("Choose", StringComparison.OrdinalIgnoreCase) &&
+                                       (firstOptionValue.IndexOf("Color", StringComparison.OrdinalIgnoreCase) >= 0);
 
-                // Skip if empty
-                if (string.IsNullOrWhiteSpace(valueAttr))
+                // If it's not a color attribute, skip this entire select and move to next column
+                if (!isColorAttribute)
                     continue;
 
-                // Add per-attribute unique value
-                bool predAlreadyExists = predefinedProductAttributeValues.Any(v =>
-                                                     v.Name.Equals(displayText, StringComparison.OrdinalIgnoreCase));
+                // Extract attribute name from the first option
+                string attributeName = firstOptionValue
+                                            .Replace("Choose", "", StringComparison.OrdinalIgnoreCase)
+                                            .Trim();
 
-                if (predAlreadyExists == false)
-                    predAlreadyExists = _context.PredefinedProductAttributeValues.Any(v =>
-                                                    v.Name == displayText);
+                processAttributeOptions(attributeName, product, select);
 
-                var predDisplayOrder = 0;
-                if (!predAlreadyExists)
-                {
-                    predefinedProductAttributeValueId = (predefinedProductAttributeValueId == 0 ? predefinedDbProductAttributeValueId : predefinedProductAttributeValueId) + 1;
-                    predDisplayOrder++;
-                    predefinedProductAttributeValues.Add(new PredefinedProductAttributeValue
-                    {
-                        Id = predefinedProductAttributeValueId,
-                        Name = displayText,
-                        IsPreSelected = false,
-                        ProductAttributeId = attribute.Id,
-                        DisplayOrder = predDisplayOrder,
-                    });
-                }
-
-
-
-                // Add per-attribute unique value
-                bool alreadyExists = productAttributeValues.Any(v =>
-                                              v.Name.Equals(displayText, StringComparison.OrdinalIgnoreCase) &&
-                                              v.ProductAttributeMappingId == mapping.Id);
-                if (alreadyExists == false)
-                    alreadyExists = _context.ProductAttributeValues.Any(v =>
-                                               v.Name == displayText &&
-                                               v.ProductAttributeMappingId == mapping.Id);
-                if (!alreadyExists)
-                {
-                    lastProductAttributeValueId = (lastProductAttributeValueId == 0 ? lastDbProductAttributeValueId : lastProductAttributeValueId) + 1;
-
-                    displayOrder++;
-                    productAttributeValues.Add(new ProductAttributeValue
-                    {
-                        Id = lastProductAttributeValueId,
-                        ProductAttributeMappingId = mapping.Id,
-                        Name = displayText,
-                        AttributeValueTypeId = 0,
-                        DisplayOrder = displayOrder,
-                    });
-                }
             }
         }
 
-        return productAttributeValues;
+       return productAttributeValues;
+    }
+    private void processAttributeOptions(string attributeName, Product product, HtmlNode select)
+    {
+       
+
+        // Find matching attribute
+        var attribute = productAttributes
+                          .FirstOrDefault(a => a.Name.Equals(attributeName, StringComparison.OrdinalIgnoreCase));
+
+        attribute ??= _context.ProductAttributes
+                            .FirstOrDefault(a => a.Name.ToLower().Equals(attributeName.ToLower()));
+        // If no match found, continue
+        if (attribute == null)
+            return;
+
+        // Create or reuse product-attribute mapping
+        var mapping = productProductAttributeMappings.FirstOrDefault(m =>
+                                                    m.ProductId == product.Id && m.ProductAttributeId == attribute.Id);
+
+        mapping = _context.ProductProductAttributeMappings.FirstOrDefault(m =>
+                                                         m.ProductId == product.Id && m.ProductAttributeId == attribute.Id);
+
+        if (mapping == null)
+        {
+            lastProductProductAttributeMappingId = (lastProductProductAttributeMappingId == 0 ? lastDbProductProductAttributeMappingId : lastProductProductAttributeMappingId) + 1;
+            mapping = new ProductProductAttributeMapping
+            {
+                Id = lastProductProductAttributeMappingId,
+                ProductId = product.Id,
+                ProductAttributeId = attribute.Id,
+                AttributeControlTypeId = 1
+            };
+            productProductAttributeMappings.Add(mapping);
+        }
+
+        // Extract valid <option> nodes (excluding disabled and the first "Choose" option)
+        var optionNodes = select.SelectNodes("option[not(@selected) and not(@disabled)]");
+        if (optionNodes == null)
+            return;
+
+        int displayOrder = 0;
+        foreach (var opt in optionNodes)
+        {
+            // Extract value attribute
+            string valueAttr = opt.GetAttributeValue("value", "").Trim();
+            string displayText = HtmlEntity.DeEntitize(opt.InnerText.Trim());
+
+            // Skip if empty
+            if (string.IsNullOrWhiteSpace(valueAttr))
+                continue;
+
+            // Add per-attribute unique value
+            bool predAlreadyExists = predefinedProductAttributeValues.Any(v =>
+                                                 v.Name.Equals(displayText, StringComparison.OrdinalIgnoreCase));
+
+            if (predAlreadyExists == false)
+                predAlreadyExists = _context.PredefinedProductAttributeValues.Any(v =>
+                                                v.Name == displayText);
+
+            var predDisplayOrder = 0;
+            if (!predAlreadyExists)
+            {
+                predefinedProductAttributeValueId = (predefinedProductAttributeValueId == 0 ? predefinedDbProductAttributeValueId : predefinedProductAttributeValueId) + 1;
+                predDisplayOrder++;
+                predefinedProductAttributeValues.Add(new PredefinedProductAttributeValue
+                {
+                    Id = predefinedProductAttributeValueId,
+                    Name = displayText,
+                    IsPreSelected = false,
+                    ProductAttributeId = attribute.Id,
+                    DisplayOrder = predDisplayOrder,
+                });
+            }
+
+
+
+            // Add per-attribute unique value
+            bool alreadyExists = productAttributeValues.Any(v =>
+                                          v.Name.Equals(displayText, StringComparison.OrdinalIgnoreCase) &&
+                                          v.ProductAttributeMappingId == mapping.Id);
+            if (alreadyExists == false)
+                alreadyExists = _context.ProductAttributeValues.Any(v =>
+                                           v.Name == displayText &&
+                                           v.ProductAttributeMappingId == mapping.Id);
+            if (!alreadyExists)
+            {
+                lastProductAttributeValueId = (lastProductAttributeValueId == 0 ? lastDbProductAttributeValueId : lastProductAttributeValueId) + 1;
+
+                displayOrder++;
+                productAttributeValues.Add(new ProductAttributeValue
+                {
+                    Id = lastProductAttributeValueId,
+                    ProductAttributeMappingId = mapping.Id,
+                    Name = displayText,
+                    AttributeValueTypeId = 0,
+                    DisplayOrder = displayOrder,
+                });
+            }
+        }
+
     }
 
-    private List<ProductSpecificationAttributeMapping> ExtractProductSpecificationMappings(string specName, string attrOption, Product product)
+    private List<ProductSpecificationAttributeMapping> ExtractProductSpecificationMappings(string specName, string specOption, Product product)
     {
         //Console.WriteLine("products:" + products.Count);
         // HtmlEntity.DeEntitize(cells[1].InnerText.Trim());
@@ -1371,11 +1425,11 @@ public class HtmlProductExtractor
             // return productSpecificationAttributeMappings;
         }
         var option = specificationAttributeOptions
-                                .FirstOrDefault(o => o.Name.Equals(attrOption, StringComparison.OrdinalIgnoreCase)
+                                .FirstOrDefault(o => o.Name.Equals(specOption, StringComparison.OrdinalIgnoreCase)
                                                   && o.SpecificationAttributeId == spec.Id);
 
         option ??= _context.SpecificationAttributeOptions
-                           .FirstOrDefault(o => o.Name.ToLower() == attrOption.ToLower()
+                           .FirstOrDefault(o => o.Name.ToLower() == specOption.ToLower()
                                              && o.SpecificationAttributeId == spec.Id);
 
         var lastSpecificationAttributeMappingDisplayOrder = 0;
@@ -1410,7 +1464,7 @@ public class HtmlProductExtractor
         return productSpecificationAttributeMappings;
     }
 
-    private Product ExtractAssociatedProducts(HtmlNode assocTable, Product product)
+    private Product ExtractAssociatedProducts(HtmlNode assocTable, ref Product product)
     {
         // ----------------------------
         // ASSOCIATED PRODUCT TABLE (descriptionBorder1)
