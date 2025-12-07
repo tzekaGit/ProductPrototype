@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using ProductPrototype.DbAccess.Data.Models;
 using ProductPrototype.DbAccess.Data.Struct;
 using System;
@@ -102,6 +103,7 @@ public class HtmlProductExtractor
     private readonly RepositoryContext _context;
     private ProductTemplates productTemplates = default;
     private string headerTblCss = string.Empty;
+    private string url = string.Empty;
     public HtmlProductExtractor(RepositoryContext context)
     {
         _context = context;
@@ -111,18 +113,22 @@ public class HtmlProductExtractor
     public async Task ExtractAllProductsFromHtmlAsync()
     {
         string htmlContent = string.Empty;
+         //url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good
 
-        //var url = "https://www.belson.com/Grosfillex-Nautical-Sling-Chaise-Lounge"; // ix column tml
+         url = "https://www.belson.com/Grosfillex-Nautical-Sling-Chaise-Lounge"; // ix column tml
         //var url = "https://www.belson.com/UpLift-Bike-Rack";
         //var url = "https://www.belson.com/32-Gallon-Steel-Trash-Receptacle-with-Diamond-Pattern";
-        var url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good
 
-       // var url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //good
+
+        // var url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //good
         //var url = "https://www.belson.com/E-Series-Steel-Picnic-Table-Rectangular";
         //var url = "https://www.belson.com/E-Series-Steel-Backless-Bench";  //good
 
         //var url = "https://www.belson.com/Classic-Style-Park-Bench-with-Diamond-Pattern-Steel";
         //var url = "https://www.belson.com/Coated-Steel-MOD-Benches-without-Back-Slatted-Steel";
+
+        if (url == string.Empty)
+            throw new Exception();
 
         ProductSku = url.Replace("https://www.belson.com/", "");
 
@@ -759,15 +765,9 @@ public class HtmlProductExtractor
 
             //get products dimensions
             GetPropertiesFromHtml(element, ref product, "div/class", "dim");
-
-            //get parent image
-            GetPropertiesFromHtml(element, ref product, "class/img", "leftL,leftR");
-
+   
             //get parent Full description
             GetPropertiesFromHtml(element, ref product, "class", "wrapper");
-
-            //get parent short description
-            GetPropertiesFromHtml(element, ref product, "class", "rightR");
 
             //get parent Full description
             GetPropertiesFromHtml(element, ref product, "id", "product");
@@ -898,27 +898,28 @@ public class HtmlProductExtractor
                 break;
 
             case "class":
-                elementNode = element.SelectSingleNode("//div[@class ='" + selectVal + "']");
-                if (selectVal == "rightR")
-                {
-                    xpathQuery = "//*[contains(concat(' ', normalize-space(@class), ' '), ' " + selectVal + " ')]/p";
-                    var shortDecsNode = element.SelectSingleNode(xpathQuery);
-                    product.ShortDescription = shortDecsNode?.InnerText;
-                    shortDecsNode?.InnerHtml = "{short-description}";
-                }
-                else if (selectVal == "wrapper")
-                {
-                    var colorOptions = element.SelectNodes("//div[@class ='" + selectVal + "']");
-                    colorOptions[colorOptions.Count - 1].InnerHtml = "<div id=\"colorContainer\"><div id=\"spheresContainer\"></div></div>";
+                
+                elementNode = element.SelectSingleNode("//div[@class ='" + selectVal + "']//div//h2");
+                var descriptionNode = elementNode.ParentNode; // elementNode.SelectSingleNode("//div[contains(concat(' ', normalize-space(@class), ' '), ' leftL ') or contains(concat(' ', normalize-space(@class), ' '), ' leftR ')]//h2");
 
+                var shortDecsNode = descriptionNode.ParentNode.SelectSingleNode("//p");
+                product.ShortDescription = shortDecsNode?.InnerText;
+                shortDecsNode?.InnerHtml = "{short-description}";
 
+                var colorOptions = element.SelectNodes("//div[@class ='" + selectVal + "']//img[contains(@src, '-CC-')]");
+               for(int i=0; i< colorOptions.Count; i++)
+                {
+                    if (i == 0) { 
+                        var colorNode = new HtmlDocument().CreateElement("div");
+                        colorNode.SetAttributeValue("class", "colorContainer");
+                        colorNode.InnerHtml = "<div id=\"spheresContainer\"></div>";
+
+                        colorOptions[0].ParentNode.ReplaceChild(colorNode, colorOptions[0]);
+                   }
+                    else
+                        colorOptions[i].ParentNode.RemoveChild(colorOptions[i]);
                 }
                 break;
-
-            //case "class/img":
-            //    xpathQuery = "//*[contains(concat(' ', normalize-space(@class), ' '), ' " + selectVal + " ')]/img";
-            //    elementNode = element.SelectSingleNode(xpathQuery);
-            //    break;
 
             case "div/class":
                 xpathQuery = "//div[contains(concat(' ', normalize-space(@class), ' '), '" + selectVal + "')]";

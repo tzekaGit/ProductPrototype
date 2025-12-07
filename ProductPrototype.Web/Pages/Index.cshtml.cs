@@ -22,8 +22,8 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var parentid = 4;
-       // await _htmlProductExtractor.ExtractAllProductsFromHtmlAsync();
+        var parentid = 4;// 4;22
+        await _htmlProductExtractor.ExtractAllProductsFromHtmlAsync();
 
         var productDetails = await _getDataFromDb.GetProductsAsync(parentid);
         ProductDetails = productDetails;
