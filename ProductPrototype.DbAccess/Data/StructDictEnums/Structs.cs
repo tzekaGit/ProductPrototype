@@ -1,4 +1,4 @@
-﻿namespace ProductPrototype.DbAccess.Data.Struct
+﻿namespace ProductPrototype.DbAccess.Data.StructDictEnums
 {
     public struct ProductTemplates
     {

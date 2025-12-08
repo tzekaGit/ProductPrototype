@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using ProductPrototype.DbAccess;
 using ProductPrototype.DbAccess.Data.ModelDto;
-using ProductPrototype.DbAccess.Data.Struct;
+using ProductPrototype.DbAccess.Data.StructDictEnums;
 
 namespace ProductPrototype.Pages;
 
