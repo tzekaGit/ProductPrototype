@@ -1,0 +1,37 @@
+﻿#colorContainer { width: 100%; text-align: center; }
+		#spheresContainer { background: #fff; padding: 30px; }
+		.frame { display: inline-block; position: relative; align-items: center; text-align: center; justify-content: center; }
+		.frame-title { margin: 20px 0 8px 0; font-size: 0.9rem; font-weight: 400; text-align: center; }
+		.sphere-set::before { content: ""; position: absolute; top: -5px; left: 40px; right: 40px; height: 1px; background: #000; z-index: 0; }
+		.sphere-set::after { content: ""; position: absolute; top: -4px; left: 40px; width: 1px; height: 22px; background: #000; z-index: 0; }
+		.vertical-right { position: absolute; top: -4px; right: 40px; width: 1px; height: 20px; background: #000; z-index: 0; }
+		.sphere-set { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; padding: 10px 20px; }
+		.sphere { width: 32px; height: 32px; border-radius: 50%; box-shadow: inset -5px -5px 10px rgba(0,0,0,0.4), 0 5px 12px rgba(0,0,0,0.6); filter: brightness(80%); }
+
+    /* Gloss / Textured colors */
+    /* Gloss Colors */
+    .green { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #33cc33; }
+    .blue { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #007bff; }
+    .ultra-blue { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #0057ff; }
+    .purple { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #8e44ad; }
+    .red { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #ff3333; }
+    .burgundy { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #800020; }
+    .orange { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #ff7b00; }
+    .beige { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #f5f5dc; }
+    .black { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0) 25%), #000000; }
+
+
+
+    /* Textured Colors */
+    .mariner-blue { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #3b5998; }
+    .mystic-blue { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #4a90e2; }
+    .green-textured { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #33cc33; }
+    .fern { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #4f7942; }
+    .yellow { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #ffff00; }
+    .red-textured { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #ff3333; }
+    .brown { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #8b4513; }
+    .gray { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #808080; }
+    .black-textured { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 15%), #000000; }
+
+    .sphere-wrapper { display: flex; flex-direction: column; align-items: center; width: 45px;}
+    .sphere-label { margin-top: 5px; font-size: 0.8rem; color: #000; text-align: center; }

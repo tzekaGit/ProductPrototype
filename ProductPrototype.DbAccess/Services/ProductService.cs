@@ -39,6 +39,7 @@ public class ProductService : IProductService
                                         Name = product.Name,
                                         Sku = product.Sku,
                                         Price = product.Price,
+                                        OldPrice = product.OldPrice,
                                         Weight = product.Weight,
                                         Width = product.Width,
                                         Length = product.Length,

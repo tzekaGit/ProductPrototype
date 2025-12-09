@@ -4,11 +4,11 @@ using ProductPrototype.DbAccess;
 using ProductPrototype.DbAccess.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDbContext<RepositoryContext>(options =>
-{
-    // <-- Enable the setting inside the options builder lambda
-    options.EnableSensitiveDataLogging();
-});
+//builder.Services.AddDbContext<RepositoryContext>(options =>
+//{
+//    // <-- Enable the setting inside the options builder lambda
+//    options.EnableSensitiveDataLogging();
+//});
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews()

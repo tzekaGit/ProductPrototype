@@ -4,10 +4,11 @@
     {
         public string TitleBackground = "";
         public string TableHeaderBackgroud = "";
+        
         public ProductTemplates()
         {
             TitleBackground = "./Images/phPicnic.jpg";
-            TableHeaderBackgroud = "./Images/pbPark.jpg"; //"./Images/pbPicnic.jpg";
+            TableHeaderBackgroud = "./Images/pbSale.jpg"; // "./Images/pbPark.jpg"; //"./Images/pbPicnic.jpg";
         }
 
 

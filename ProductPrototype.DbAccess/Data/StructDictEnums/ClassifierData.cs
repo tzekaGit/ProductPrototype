@@ -58,15 +58,20 @@ public class ClassifierData
     { "rose", "Color" },
     { "sand", "Color" },
     { "moss", "Color" },
-    { "stone", "Color" },
-    { "ash", "Color" },
+    { "stone", "Color"},
+    { "ash", "Color"  },
     { "dusty", "Color" },
 
-
-    {"unit",  "Quatity"},
-    {"units", "Quatity"}
+    // quantity and special
+    {"unit",  "Quantity"},
+    {"units", "Quantity"},
+    {"special", "Special"},
+    {"specials", "Specials"},
+    {"lbs", "Weight"}
 };
 
+
+ 
     public static readonly Dictionary<string, string> ColumnHeaderMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         { "frame color", "Frame Color" },

@@ -1,8 +1,16 @@
-﻿const ProductGroupHeader_Template = `
+﻿const productGroupHeader_Template = `
     <tr style="background: url('{bgImg}')">
        <td class="item" colspan="6" class = "ptExpanded2"><h2 class="px13"> {name1} | <span class="cffff00">{name2}</span></h2></td>
        <td class="qty">Qty</td>
     </tr>
+`;
+const productGroupHeaderWithDiscount_Template = `
+        <tr style="background: url('{bgImg}')">
+            <td class="itemSpecial440" colspan="4"><h2 class="px13">{name1} <span class="cffff00"> |{name2}</span></h2></td>
+            <td class="was50">Was</td>
+            <td class="special75">Special</td>
+            <td class="qty">Qty</td>
+        </tr>
 `;
 
 const benchProductColumns = `
@@ -22,32 +30,45 @@ const six_Column_Template = `
       <tr  style="{style}">
         <td class="model85"><a href="javascript:gallery('{sku}')">{sku}</a></td>
         <td class="detail110">{specification}</td>
-        <td class="detail120" id="seatColor"><select size="1" name="AN{i}" style="width: 120px;">{seatColors}</select></td>
+        <td class="detail120" id="seatColor"><{select1} size="1" name="AN{i}" style="width: 120px;">{seatColors}</{select1}></td>
         <td class="lbs55">({weight} lbs)</td>
         <td class="price75">{price}</td>
         <td class="entry"><input name="QTY{i}" size="2" maxlength="6" style="text-align: center;" class="qty_box" /></td>
       </tr>
 `;
 
-const seven_Column_Template = `
+const seven_Column_Template = ` 
       <tr  style="{style}">
         <td class="model85"><a href="javascript:gallery('{sku}')">{sku}</a></td>
         <td class="detail110">{specification}</td>
-        <td class="detail120" id="seatColor"><select size="1" name="AN{i}" style="width: 120px;">{seatColors}</select></td>
-        <td class="detail120" id="frameColor"><select size="1" name="BN{i}" style="width: 120px;">{frameColors}</select></td>
+        <td class="detail120" id="seatColor"><{select1} size="1" name="AN{i}" style="width: 120px;">{seatColors}</{select1}></td>
+        <td class="detail120" id="frameColor"><{select2} size="1" name="BN{i}" style="width: 120px;">{frameColors}</{select2}></td>
         <td class="lbs55">({weight} lbs)</td>
         <td class="price75">{price}</td>
         <td class="entry"><input name="QTY{i}" size="2" maxlength="6" style="text-align: center;" class="qty_box" /></td>
       </tr>
 `;
+seven_Column_WithOldPrice_Template = `
+    <tr>
+		    <td class="model125">{sku}</td>
+		    <td class="detail110">{specification}</td>
+		    <td class="detail120"><{select1} size="1" name="AN{i}" style="width: 120px;">{seatColors}</{select1}></td>
+		    <td class="lbs65">({weight} lbs)</td>
+		    <td class="priceWas70">{oldPrice}</td> 
+		    <td class="price65">{price}</td>
+		    <td class="pick"><input name="QTY{i}" size="2" maxlength="6" style="text-align: center;" class="qty_box" /></td>
+		</tr>
+`;
+
+
 
 const eight_Column_Template = `
       <tr  style="{style}">
         <td class="alpha"><img border="0" src="./Park Bench with Diamond Pattern Steel _ Belson Outdoors®_files/UA-Glyph2-0.gif" width="20" height="20" alt="UA Logo"></td>
         <td class="model85"><a href="javascript:gallery('{sku}')">{sku}</a></td>
         <td class="detail110">{specification}</td>
-        <td class="detail120" id="seatColor"><select size="1" name="AN{i}" style="width: 120px;">{seatColors}</select></td>
-        <td class="detail120" id="frameColor"><select size="1" name="BN{i}" style="width: 120px;">{frameColors}</select></td>
+        <td class="detail120" id="seatColor"><{select1} size="1" name="AN{i}" style="width: 120px;">{seatColors}</{select1}></td>
+        <td class="detail120" id="frameColor"><{select2} size="1" name="BN{i}" style="width: 120px;">{frameColors}</{select2}></td>
         <td class="lbs55">({weight} lbs)</td>
         <td class="price75">{price}</td>
         <td class="entry"><input name="QTY{i}" size="2" maxlength="6" style="text-align: center;" class="qty_box" /></td>

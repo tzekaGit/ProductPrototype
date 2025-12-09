@@ -21,14 +21,17 @@ function buildVariantRow(variant, hasAssociation) {
 		specification: specifications ? specifications.specificationName : "",
 		weight: variant.weight,
 		price: formatPrice(variant.price),
-		seatColors: seatColorOptions,
+		oldPrice: variant.oldPrice !=0? formatPrice(variant.oldPrice):0,
+		seatColors: seatColorOptions,	
 		frameColors: frameColorOptions,
 		style: "",
+		select1: seatColorOptions.split('</option>').length == 2 ? "span" : "select",
+		select2: frameColorOptions.split('</option').length == 2 ? "span" : "select",
 		i: index,
 		style: hasAssociation == true ? "border-bottom:none" : ""
 	};
 	let html = "";
-	html = seven_Column_Template.replace(/{(\w+)}/g, (match, key) => data[key] ?? match);
+	html = seven_Column_Template.replace(/{(\w+)}/g, (match, key) => data[key] ?? match); //six_Column_Template , seven_Column_WithOldPrice_Template /seven_Column_Template
 	$tbody.append(html);
 }
 
@@ -41,7 +44,7 @@ function buildAssociateRow(assoc) {
 		sku: assoc.sku,
 		name: "Covers",
 		description: "2 Covers Required Per Bench - ",
-		price: formatPrice(assoc.price) ,
+		price: formatPrice(assoc.price),
 		unit: "each",
 		i: index
 	};

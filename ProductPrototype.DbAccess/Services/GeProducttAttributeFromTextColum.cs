@@ -37,7 +37,10 @@ public static class GeProducttAttribute
 
         // 4. Determine Dominant Product and Attribute Type
         string dominantProduct = productTokens.GroupBy(t => t).OrderByDescending(g => g.Count()).First().Key;
-        string dominantAttribute = attributeTypes.OrderByDescending(kv => kv.Value).First().Key;
+        string dominantAttribute = string.Empty;
+        if (!string.IsNullOrEmpty(dominantProduct)) { 
+            dominantAttribute = attributeTypes.OrderByDescending(kv => kv.Value)?.First().Key;
+        }
 
         // 5. Final Mapping (e.g., using a lookup: "frame" + "AttributeOption" => "Frame AttributeOption")
         string columnKey = $"{dominantProduct} {dominantAttribute}";
@@ -48,7 +51,7 @@ public static class GeProducttAttribute
             return finalHeader;
         }
 
-        return $"Unknown Column: {columnKey}";
+        return $"TableCommonAttribute";
     }
 
     public static ClassificationResult MatchAttributeName(string label)

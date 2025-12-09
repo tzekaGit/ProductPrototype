@@ -22,7 +22,7 @@ public class IndexModel : PageModel
 
     public async Task OnGetAsync()
     {
-        var parentid = 4;// 4;22
+        var parentid = 7;// 62;37; 22; 4;22
         await _htmlProductExtractor.ExtractAllProductsFromHtmlAsync();
 
         var productDetails = await _getDataFromDb.GetProductsAsync(parentid);

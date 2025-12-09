@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using ProductPrototype.DbAccess.Data.Models;
 using ProductPrototype.DbAccess.Data.StructDictEnums;
 using ProductPrototype.DbAccess.Services;
@@ -102,7 +103,6 @@ public class HtmlProductExtractor
     private ProductTemplates productTemplates = default;
     private string headerTblCss = string.Empty;
     private string url = string.Empty;
-    private string labelAttributeName = string.Empty;
 
     public HtmlProductExtractor(RepositoryContext context)
     {
@@ -113,21 +113,28 @@ public class HtmlProductExtractor
     public async Task ExtractAllProductsFromHtmlAsync()
     {
         string htmlContent = string.Empty;
-        //url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good
+        url = "https://www.belson.com/Classic-Style-Park-Bench-with-Diamond-Pattern-Steel"; // good seven column template
 
+        //url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good standard template 
+        /// 
+        /// Both  attributes in label format
+        ///
+        // url = "https://www.belson.com/Powder-Coated-Round-Tube-Wave-Bike-Racks"; // good with old price seven columnst  template
         //url = "https://www.belson.com/Grosfillex-Nautical-Sling-Chaise-Lounge"; // good- six column tml
-        //url = "https://www.belson.com/E-Series-Steel-Backless-Bench"; // good 
+        // url = "https://www.belson.com/E-Series-Steel-Backless-Bench"; // good 7 column template/ green color
         //url = "https://www.belson.com/UpLift-Bike-Rack"; //good red color
+        //url = "https://www.belson.com/Buckaroo-Playground-Structure"; // six column template / green color
+
 
         //url = "https://www.belson.com/32-Gallon-Steel-Trash-Receptacle-with-Diamond-Pattern"; //complex with dropdown & labels
         //url = "https://www.belson.com/Fiberglass-Umbrellas-Bistro"; // related products fails
 
-         //url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //too complex
-         url = "https://www.belson.com/E-Series-Steel-Picnic-Table-Rectangular"; //good, the first columns should be TableColumn1
+        //url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //too complex
+        // url = "https://www.belson.com/E-Series-Steel-Picnic-Table-Rectangular"; //good, the first columns should be TableColumn1
         // url = "https://www.belson.com/E-Series-Steel-Backless-Bench";  //good
 
-        // url = "https://www.belson.com/Classic-Style-Park-Bench-with-Diamond-Pattern-Steel"; // good
         // url = "https://www.belson.com/Coated-Steel-MOD-Benches-without-Back-Slatted-Steel";
+
 
         if (url == string.Empty)
             throw new Exception();
@@ -189,7 +196,7 @@ public class HtmlProductExtractor
         }
 
         //var headers = ExtractDynamicHeaders(htmlContent);
-        ExtractAttributesAndSpecifications(doc);
+        ExtractSpecifications(doc);
         var variants = ExtractProductsFromHtml(doc);
         allProducts.AddRange(variants);
 
@@ -212,8 +219,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.ProductAttribute ON");
                 foreach (var entity in productAttributes)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.ProductAttributes.Any(item => item.Id == entity.Id)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.ProductAttributes.Any(item => item.Id == entity.Id)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
                         // Case 1: NEW Entity
                         _context.ProductAttributes.Add(entity);
@@ -233,8 +240,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.PredefinedProductAttributeValue ON");
                 foreach (var entity in predefinedProductAttributeValues)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.PredefinedProductAttributeValues.Any(item => item.Id == entity.Id)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.PredefinedProductAttributeValues.Any(item => item.Id == entity.Id)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
                         // Case 1: NEW Entity
                         _context.PredefinedProductAttributeValues.Add(entity);
@@ -255,8 +262,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.SpecificationAttributeGroup ON");
                 foreach (var entity in specificationAttributeGroups)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.SpecificationAttributeGroups.Any(item => item.Id == entity.Id))// or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.SpecificationAttributeGroups.Any(item => item.Id == entity.Id))// or attributeName.Id == Guid.Empty for Guid keys
                     {
 
                         // Case 1: NEW Entity
@@ -278,8 +285,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.SpecificationAttribute ON");
                 foreach (var entity in specificationAttributes)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.SpecificationAttributes.Any(item => item.Id == entity.Id)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.SpecificationAttributes.Any(item => item.Id == entity.Id)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
 
                         // Case 1: NEW Entity
@@ -300,8 +307,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.SpecificationAttributeOption ON");
                 foreach (var entity in specificationAttributeOptions)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.SpecificationAttributeOptions.Any(item => item.Id == entity.Id)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.SpecificationAttributeOptions.Any(item => item.Id == entity.Id)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
 
                         // Case 1: NEW Entity
@@ -322,8 +329,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Picture ON");
                 foreach (var entity in pictures)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.Pictures.Any(item => item.Id == entity.Id))  // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.Pictures.Any(item => item.Id == entity.Id))  // or attributeName.Id == Guid.Empty for Guid keys
                     {
                         // Case 1: NEW Entity
                         _context.Pictures.Add(entity);
@@ -342,8 +349,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Product ON");
                 foreach (var entity in allProducts)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.Products.Any(item => item.Sku == entity.Sku))  // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.Products.Any(item => item.Sku == entity.Sku))  // or attributeName.Id == Guid.Empty for Guid keys
                     {
                         // Case 1: NEW Entity
                         _context.Products.Add(entity);
@@ -361,8 +368,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Product_ProductAttribute_Mapping ON");
                 foreach (var entity in productProductAttributeMappings)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.ProductProductAttributeMappings.Any(item => item.Id == entity.Id)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.ProductProductAttributeMappings.Any(item => item.Id == entity.Id)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
                         // Case 1: NEW Entity
                         _context.ProductProductAttributeMappings.Add(entity);
@@ -381,8 +388,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Product_Picture_Mapping ON");
                 foreach (var entity in productPictureMappings)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.ProductPictureMappings.Any(item => item.ProductId == entity.ProductId && item.PictureId == entity.PictureId)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.ProductPictureMappings.Any(item => item.ProductId == entity.ProductId && item.PictureId == entity.PictureId)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
                         // Case 1: NEW Entity
                         _context.ProductPictureMappings.Add(entity);
@@ -401,8 +408,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.ProductAttributeValue ON");
                 foreach (var entity in productAttributeValues)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.ProductAttributeValues.Any(item => item.Id == entity.Id)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.ProductAttributeValues.Any(item => item.Id == entity.Id)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
 
                         // Case 1: NEW Entity
@@ -422,8 +429,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Product_SpecificationAttribute_Mapping ON");
                 foreach (var entity in productSpecificationAttributeMappings)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.ProductSpecificationAttributeMappings.Any(item => item.Id == entity.Id)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.ProductSpecificationAttributeMappings.Any(item => item.Id == entity.Id)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
 
                         // Case 1: NEW Entity
@@ -444,8 +451,8 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.RelatedProduct ON");
                 foreach (var entity in relatedProducts)
                 {
-                    // 1. Check if the attr is NEW or UPDATED based on its ID
-                    if (!_context.RelatedProducts.Any(item => item.Id == entity.Id)) // or attr.Id == Guid.Empty for Guid keys
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.RelatedProducts.Any(item => item.Id == entity.Id)) // or attributeName.Id == Guid.Empty for Guid keys
                     {
 
                         // Case 1: NEW Entity
@@ -623,6 +630,7 @@ public class HtmlProductExtractor
         var allTables = doc.DocumentNode
                           .SelectNodes(xpath)
                           ?.ToList();
+
         if (allTables == null || allTables.Count == 0)
             return products;
 
@@ -830,7 +838,7 @@ public class HtmlProductExtractor
                 {
                     elementNode = element.SelectSingleNode(".//div[@class ='leftL']");
                     elementNode ??= element.SelectSingleNode(".//div[@class ='leftR']");
-                    if (elementNode == null) return;
+                    if (elementNode == null) break;
                 }
 
                 var imgNode = elementNode.SelectSingleNode("..//img");
@@ -901,7 +909,9 @@ public class HtmlProductExtractor
                 product.ShortDescription = shortDecsNode?.InnerText;
                 shortDecsNode?.InnerHtml = "{short-description}";
 
-                var colorOptions = element.SelectNodes("//div[@class ='" + selectVal + "']//img[contains(@src, '-CC-')]");
+                var colorOptions = element.SelectNodes("//div[@class ='" + selectVal + "']//img[contains(@src, '-CC-') or contains(@src, '-BT-') ]");
+                if (colorOptions == null || colorOptions.Count == 0)
+                    break;
                 for (int i = 0; i < colorOptions.Count; i++)
                 {
                     if (i == 0)
@@ -1001,12 +1011,27 @@ public class HtmlProductExtractor
                 }
 
                 // Price
-                var priceNode = table.SelectSingleNode(".//td[contains(@class,'price')]");
-                if (priceNode != null)
-                {
-                    var priceText = priceNode.InnerText.Replace("$", "").Trim();
-                    if (decimal.TryParse(priceText, out decimal p))
-                        product.Price = p;
+                var priceNodes = table.SelectNodes(".//td[contains(@class,'price')]");
+                product.Price = 0;
+                foreach (var priceNode in priceNodes) { 
+                    if (priceNode != null)
+                    {
+                        var priceText = priceNode.InnerText.Replace("$", "").Trim();
+                        if (decimal.TryParse(priceText, out decimal p))
+                        {
+                            if (product.Price == 0)
+                                product.Price = p;
+                            else
+                            {
+                                product.OldPrice = product.Price;
+                                product.Price = p;
+                            }
+                        }
+
+
+                       
+                        
+                    }
                 }
             }
 
@@ -1029,7 +1054,7 @@ public class HtmlProductExtractor
         return product;
     }
 
-    private void ExtractAttributesAndSpecifications(HtmlDocument doc)
+    private void ExtractSpecifications(HtmlDocument doc)
     {
 
         string specName = string.Empty;
@@ -1040,16 +1065,13 @@ public class HtmlProductExtractor
 
         CreateGroupingSpecifications(groupName, specName, doc);
 
-        foreach (var row in doc.DocumentNode.SelectNodes("//table[contains(@class, 'description')]//tr") ?? Enumerable.Empty<HtmlNode>())
+        foreach (var row in doc.DocumentNode.SelectNodes($"//table[contains(@class, 'description') and not(contains(@class, '{headerTblCss}')) ]//tr") ?? Enumerable.Empty<HtmlNode>())
         {
-
-            if (row.SelectNodes("./td")?.Count <= 4)
+            if (row.SelectNodes("./td")?.Count > 0 && row.SelectNodes("./td")?.Count <= 4)
             {
                 continue;
             }
             var cells = row.SelectNodes("td");
-            if (cells == null) continue;
-
             // Detect Specification 1 (specificationAttributes)
             int specIndex = 1;
             if (row.SelectSingleNode(".//td[contains(@class,'alpha')]") != null)
@@ -1062,75 +1084,64 @@ public class HtmlProductExtractor
             groupName = SpecificationTypes.TableColumn1.ToString();
 
             CreateSpecifications(specText, groupName, specName);
+        }
+    }
+    private void CreateAttributeFromText(HtmlNode row, Product product)
+    { 
+        var allColumnNumber = row.SelectNodes(".//td[not(contains(@class,'price') or contains(@class,'QTY') or contains(@class,'pick')) ]")?.Count ?? 0;
+        int cellAttrIndex = 0;
+ 
 
+        if (row.SelectSingleNode(".//td[1]")?.InnerText == product.Sku)
+        {
+            cellAttrIndex = 3;
+        }
+        else if (row.SelectSingleNode(".//td[2]")?.InnerText == product.Sku)
+        {
+            cellAttrIndex = 4;
+        }
 
-            // Detect <select> dropdowns (Product Attributes)
-            var allColums = row.SelectNodes(".//td").Count;
+        int maxAttrColumns = (allColumnNumber == 4? 1:2);
 
-            var selects = row.SelectNodes(".//select[not(contains(@name,'QTY'))]");
-            string attributeName = string.Empty;
-
-            if (selects == null || selects.Count() == 1)
+        int attributeIndex = 0;
+        for (int i = cellAttrIndex; i < cellAttrIndex + maxAttrColumns; i++)
+        {
+           
+            var attrSelectNode = row.SelectSingleNode($".//td[{i}]//select");
+            if (attrSelectNode == null)
             {
-                var textColorIndex = 0;
-                if (allColums == 6 || allColums == 7)
-                        textColorIndex = 3;
-                else if (allColums == 8)
-                        textColorIndex = 4;
+                string attrValue = row.SelectSingleNode($".//td[{i}]").InnerText;
+                attrValue = Regex.Replace(attrValue, @"\s+", " ").Trim();
 
-                var attrCell = row.SelectSingleNode($".//td[{textColorIndex}]/select");
-                if (attrCell == null)
-                {
-                    GetAttributeFromText(row, textColorIndex);
-                }
-                textColorIndex++;
-                attrCell = row.SelectSingleNode($".//td[{textColorIndex}]/select");
+                string punctuationPattern = @"[()\[\]\{\},.:;""\'\-\/\\]";
+                string xpathQuery = $".//table//tr/td[{cellAttrIndex}]";
 
-                if(attrCell == null)
-                {
-                    GetAttributeFromText(row, textColorIndex);
-                }
-            }
-            if (selects == null)
-                return;
-            foreach (var select in selects)
-            {
-                string selectedLabel = select.SelectSingleNode("option[@selected]")?.InnerText.Trim() ?? "";
-                // Unify Seat AttributeOption / Frame AttributeOption → "AttributeOption"
-                attributeName = selectedLabel.Contains("Choose", StringComparison.OrdinalIgnoreCase) && selectedLabel.Contains("AttributeOption", StringComparison.OrdinalIgnoreCase) ? selectedLabel.Replace("Choose ", "").Trim() : selectedLabel;
-                if (string.IsNullOrWhiteSpace(attributeName)) continue;
+                // 2. Use LINQ and a Lambda expression to select and transform the data
+                List<string> columnData = row.ParentNode.ParentNode.SelectNodes(xpathQuery)?
+                    // The Where clause ensures we only process nodes that have InnerText
+                    .Where(n => n != null && !string.IsNullOrWhiteSpace(n.InnerText))
+                    // The Select clause applies the cleaning logic to each node's InnerText
+                    .Select(cell =>
+                    {
+                        string cleanedText = Regex.Replace(cell.InnerText, @"\s+", " ").Trim(); // Remove spaces
+                        return Regex.Replace(cleanedText, punctuationPattern, " ").Trim(); // Remove punctuation
+                    })
+                    .Distinct()
+                    .ToList()
+                    ?? new List<string>(); // Use the Null-Conditional Operator (?.) for safety
+
+                attributeIndex++;
+                var attributeName = GeProducttAttribute.GetAttributeName(columnData) + attributeIndex;
                 CreateHtmlSelecAtttribute(attributeName);
+                HtmlNode newAtrSelectNode = CreateNewAttributeNode(attrValue);
+                ProcessAttributeOptions(attributeName, product, newAtrSelectNode);
             }
         }
     }
 
-    private void GetAttributeFromText(HtmlNode row, int textColorIndex)
+    private ProductAttribute CreateHtmlSelecAtttribute(string attributeName)
     {
-        string punctuationPattern = @"[()\[\]\{\},.:;""\'\-\/\\]";
-        string xpathQuery = $".//table//tr/td[{textColorIndex}]";
-
-        // 2. Use LINQ and a Lambda expression to select and transform the data
-        List<string> columnData = row.ParentNode.ParentNode.SelectNodes(xpathQuery)?
-            // The Where clause ensures we only process nodes that have InnerText
-            .Where(n => n != null && !string.IsNullOrWhiteSpace(n.InnerText))
-            // The Select clause applies the cleaning logic to each node's InnerText
-            .Select(cell =>
-            {
-                string cleanedText = Regex.Replace(cell.InnerText, @"\s+", " ").Trim(); // Remove spaces
-                return Regex.Replace(cleanedText, punctuationPattern, " ").Trim(); // Remove punctuation
-            })
-            .Distinct()
-            .ToList()
-            ?? new List<string>(); // Use the Null-Conditional Operator (?.) for safety
-
-        var attrName = GeProducttAttribute.GetAttributeName(columnData);
-        labelAttributeName = attrName;
-        CreateHtmlSelecAtttribute(attrName);
-    }
-
-    private void CreateHtmlSelecAtttribute(string attributeName)
-    {
-        // Check if the attr exists
+        // Check if the attributeName exists
         var attr = productAttributes
                             .FirstOrDefault(a => a.Name == attributeName);
 
@@ -1142,7 +1153,7 @@ public class HtmlProductExtractor
         if (attr == null)
         {
             lastProductAttributeId = (lastProductAttributeId == 0 ? lastDbProductAttributeId : lastProductAttributeId) + 1;
-            // Create a new attr
+            // Create a new attributeName
             attr = new ProductAttribute
             {
                 Id = lastProductAttributeId,
@@ -1151,6 +1162,7 @@ public class HtmlProductExtractor
             };
             productAttributes.Add(attr);
         }
+        return attr;
     }
 
     private void CreateGroupingSpecifications(string groupName, string specName, HtmlDocument doc)
@@ -1333,32 +1345,13 @@ public class HtmlProductExtractor
                                             .Trim();
 
 
-                processAttributeOptions(attributeName, product, select);
+                ProcessAttributeOptions(attributeName, product, select);
             }
         }
 
         if (selects == null || selects.Count == 1)
         {
-            int cellAttrIndex = 0;
-            if (row.SelectSingleNode(".//td[1]")?.InnerText == product.Sku)
-            {
-                cellAttrIndex = 3;
-            }
-            else if (row.SelectSingleNode(".//td[2]")?.InnerText == product.Sku)
-            {
-                cellAttrIndex = 4;
-            }
-            var attrSelectNode = row.SelectSingleNode($".//td[{cellAttrIndex}]//select");
-            if (attrSelectNode != null && row.SelectSingleNode($".//td[{cellAttrIndex + 1}]//select") == null)
-            {
-                string attrValue = row.SelectSingleNode($".//td[{cellAttrIndex + 1}]").InnerText;
-
-                attrValue = Regex.Replace(attrValue, @"\s+", " ").Trim();
-
-                HtmlNode newAtrSelectNode = CreateNewAttributeNode(attrValue);
-                processAttributeOptions(labelAttributeName, product, newAtrSelectNode);
-            }
-
+            CreateAttributeFromText(row, product);
         }
 
         return productAttributeValues;
@@ -1376,7 +1369,7 @@ public class HtmlProductExtractor
         return attrSelectNode;
     }
 
-    private void processAttributeOptions(string attributeName, Product product, HtmlNode select)
+    private void ProcessAttributeOptions(string attributeName, Product product, HtmlNode select)
     {
 
 
@@ -1388,7 +1381,7 @@ public class HtmlProductExtractor
                             .FirstOrDefault(a => a.Name.ToLower().Equals(attributeName.ToLower()));
         // If no match found, continue
         if (attribute == null)
-            return;
+            attribute = CreateHtmlSelecAtttribute(attributeName) ;
 
         // Create or reuse product-attribute mapping
         var mapping = productProductAttributeMappings.FirstOrDefault(m =>
@@ -1429,14 +1422,6 @@ public class HtmlProductExtractor
                 displayOrder = CreateUpdateAttributeOptions(attribute, mapping, displayOrder, displayText);
             }
         }
-
-        //if (select.ParentNode.SelectNodes("..//td//select")?.Count < 2)
-        //{
-        //    var displayText = labelAttributeName;
-        //    displayOrder = CreateUpdateAttributeOptions(attribute, mapping, displayOrder, displayText);
-        //}
-
-
     }
 
     private int CreateUpdateAttributeOptions(ProductAttribute attribute, ProductProductAttributeMapping mapping, int displayOrder, string displayText)
