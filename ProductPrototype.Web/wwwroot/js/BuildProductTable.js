@@ -31,7 +31,7 @@ function buildVariantRow(variant, hasAssociation) {
 		style: hasAssociation == true ? "border-bottom:none" : ""
 	};
 	let html = "";
-	html = seven_Column_Template.replace(/{(\w+)}/g, (match, key) => data[key] ?? match); //six_Column_Template , seven_Column_WithOldPrice_Template /seven_Column_Template
+	html = six_Column_Template.replace(/{(\w+)}/g, (match, key) => data[key] ?? match); //six_Column_Template , seven_Column_WithOldPrice_Template /seven_Column_Template
 	$tbody.append(html);
 }
 

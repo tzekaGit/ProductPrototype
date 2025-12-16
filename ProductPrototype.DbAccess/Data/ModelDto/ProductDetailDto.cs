@@ -2,7 +2,7 @@
 
 namespace ProductPrototype.DbAccess.Data.ModelDto;
 
-public class ProductDetailDto: Product
+public class ProductDetailDto : Product
 {
     public int ProductId { get; set; }
     public int GroupBySpecificationId { get; set; }
@@ -11,6 +11,8 @@ public class ProductDetailDto: Product
     public bool IsRequired { get; set; }
     public List<RelatedProduct>? RelatedProducts { get; set; }
     public List<Product>? RelatedProductDetails { get; set; }
-    public List<ProductAttributeDto>? ProductAttributes {get; set;}
+    public List<ProductAttributeDto>? ProductAttributes { get; set; }
     public List<SpecificationAttributeOptionDto>? ProductSpecificationAttributeOptions { get; set; }
+    public ProductTemplate? ProductTemplate { get; set; }
+
 }

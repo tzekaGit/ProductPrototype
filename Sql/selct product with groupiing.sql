@@ -22,9 +22,7 @@ SELECT distinct TOP (1000)  spec.[Id]
       inner join SpecificationAttribute spec on spec.Id = spcOpt.SpecificationAttributeId
       inner join SpecificationAttributeGroup specGr on specGr.Id = spec.SpecificationAttributeGroupId
        
-    where (prod.Id = 48  Or  prod.ParentGroupedProductId = 48)
-    and spcOpt.Id  in (select SpecificationAttributeOptionId  from  [Product_SpecificationAttribute_Mapping] where ProductId= 48)
-
+    where (prod.Id = 4  Or  prod.ParentGroupedProductId = 4)
 
 
   order by spcOpt.DisplayOrder asc

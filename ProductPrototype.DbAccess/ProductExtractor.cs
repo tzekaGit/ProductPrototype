@@ -1,8 +1,6 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Client;
 using ProductPrototype.DbAccess.Data.Models;
-using ProductPrototype.DbAccess.Data.StructDictEnums;
 using ProductPrototype.DbAccess.Services;
 using System.Data;
 using System.Globalization;
@@ -13,19 +11,41 @@ using File = System.IO.File;
 
 namespace ProductPrototype.DbAccess;
 
-public class ProductHeader
+public class PageTmp
 {
-    public int ColumnIndex { get; set; }        // column order
-    public string CssClass { get; set; }        // td/th class
-    public string Style { get; set; }           // inline style or inherited
-    public string ParentTableStyle { get; set; } // e.g. border color, width, etc.
+    public string TitleBgImg { get; set; }
+    public string CssClass { get; set; }
+    public string HeaderTmp { get; set; }
+
 }
+
+public class ProdRowTmp
+{
+    public int Id { get; set; }
+    public int ProductId { get; set; }
+    public string TmpName { get; set; }        // td/th class
+    public List<ColumnStyle> columnStyles { get; set; }
+}
+public class ColumnStyle
+{
+    public int DisplayOrder { get; set; }
+    public string Style { get; set; }
+    public string CssClass { get; set; }
+    public int Colspan { get; set; }
+}
+
 
 
 public enum SpecificationTypes
 {
     TableColumn1,
     ProductGrouping1,
+}
+
+public enum ProdGropupHeaders
+{
+    GRP1,
+    GRP2
 }
 
 
@@ -41,10 +61,10 @@ public class Dimension()
 
 public class HtmlProductExtractor
 {
-    private List<ProductHeader> headers = new();
+    private List<ProdRowTmp> prodRowTmps = new();
 
+    //db entities
     private List<Product> products = new();
-
     private List<ProductAttribute> productAttributes = new();
     private List<PredefinedProductAttributeValue> predefinedProductAttributeValues = new();
     private List<ProductAttributeValue> productAttributeValues = new();
@@ -61,6 +81,10 @@ public class HtmlProductExtractor
     private List<Picture> pictures = new();
     private List<ProductPictureMapping> productPictureMappings = new();
     private List<Dimension> dimensions = new();
+    private List<ProductTemplate> productTemplates = new();
+
+    //template
+    public PageTmp pageTemplate = new();
 
 
     private int lastDbProductAttributeId = 0;
@@ -93,53 +117,61 @@ public class HtmlProductExtractor
 
     private int lastProductSpecificationAttributeMappingId = 0;
     private int lastRelatedProductId = 0;
-
+    private int lastProductTemplatesListIdd = 0;
     // pictures
     private int lastPictureId = 0;
     private int lastPictureMappingId = 0;
     private Product lastParentProduct = default;
     private string ProductSku = string.Empty;
     private readonly RepositoryContext _context;
-    private ProductTemplates productTemplates = default;
     private string headerTblCss = string.Empty;
     private string url = string.Empty;
+    private int lastProductTemplateId = 0;
+    private int lastDbProductTemplateId = 0;
 
+    private int lastProductHeaderId = 0;
     public HtmlProductExtractor(RepositoryContext context)
     {
         _context = context;
-        productTemplates = new ProductTemplates();
+
     }
 
-    public async Task ExtractAllProductsFromHtmlAsync()
+    public async Task ExtractAllProductsFromHtmlAsync(string productName = "")
     {
         string htmlContent = string.Empty;
-        url = "https://www.belson.com/Classic-Style-Park-Bench-with-Diamond-Pattern-Steel"; // good seven column template
+        if (!string.IsNullOrEmpty(productName))
+        {
+            url = "https://www.belson.com/" + productName;
+        }
+        else
+        {
+            //url = "https://www.belson.com/Classic-Style-Park-Bench-with-Diamond-Pattern-Steel"; // good seven column template
 
-        //url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good standard template 
-        /// 
-        /// Both  attributes in label format
-        ///
-        // url = "https://www.belson.com/Powder-Coated-Round-Tube-Wave-Bike-Racks"; // good with old price seven columnst  template
-        //url = "https://www.belson.com/Grosfillex-Nautical-Sling-Chaise-Lounge"; // good- six column tml
-        // url = "https://www.belson.com/E-Series-Steel-Backless-Bench"; // good 7 column template/ green color
-        //url = "https://www.belson.com/UpLift-Bike-Rack"; //good red color
-        //url = "https://www.belson.com/Buckaroo-Playground-Structure"; // six column template / green color
+            //url = "https://www.belson.com/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel"; //good standard template 
+            /// 
+            /// Both  attributes in label format
+            ///
+            //url = "https://www.belson.com/Powder-Coated-Round-Tube-Wave-Bike-Racks"; // good with old price seven columnst  template
+            //url = "https://www.belson.com/Grosfillex-Nautical-Sling-Chaise-Lounge"; // good- six column tml
+            // url = "https://www.belson.com/E-Series-Steel-Backless-Bench"; // good 7 column template/ green color
+            //url = "https://www.belson.com/UpLift-Bike-Rack"; //good red color
+            //url = "https://www.belson.com/Buckaroo-Playground-Structure"; // six column template / green color
 
 
-        //url = "https://www.belson.com/32-Gallon-Steel-Trash-Receptacle-with-Diamond-Pattern"; //complex with dropdown & labels
-        //url = "https://www.belson.com/Fiberglass-Umbrellas-Bistro"; // related products fails
+            url = "https://www.belson.com/32-Gallon-Steel-Trash-Receptacle-with-Diamond-Pattern"; //complex with dropdown & labels
+                                                                                                  //url = "https://www.belson.com/Fiberglass-Umbrellas-Bistro"; // related products fails
 
-        //url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //too complex
-        // url = "https://www.belson.com/E-Series-Steel-Picnic-Table-Rectangular"; //good, the first columns should be TableColumn1
-        // url = "https://www.belson.com/E-Series-Steel-Backless-Bench";  //good
+            //url = "https://www.belson.com/Recycled-Plastic-Malibu-Park-Bench-Portable-Mount"; //too complex
+            // url = "https://www.belson.com/E-Series-Steel-Picnic-Table-Rectangular"; //good, the first columns should be TableColumn1
+            // url = "https://www.belson.com/E-Series-Steel-Backless-Bench";  //good
 
-        // url = "https://www.belson.com/Coated-Steel-MOD-Benches-without-Back-Slatted-Steel";
-
+            // url = "https://www.belson.com/Coated-Steel-MOD-Benches-without-Back-Slatted-Steel";
+        }
 
         if (url == string.Empty)
             throw new Exception();
 
-        ProductSku = url.Replace("https://www.belson.com/", "");
+        ProductSku = productName;
 
         htmlContent = GetHtmlFromUrlAsync(url).Result;
 
@@ -189,19 +221,20 @@ public class HtmlProductExtractor
 
             lastDbPictureMappingId = await _context.ProductPictureMappings
                                                     .MaxAsync(e => (int?)e.Id) ?? 0;
+            lastDbProductTemplateId = await _context.ProductTemplates.MaxAsync(e => (int?)e.Id) ?? 0;
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex.Message);
         }
 
-        //var headers = ExtractDynamicHeaders(htmlContent);
+
         ExtractSpecifications(doc);
-        var variants = ExtractProductsFromHtml(doc);
+        var variants = ExtractProductsFromHtml(doc, productName);
         allProducts.AddRange(variants);
 
         ////Export to JSON Format 
-        //json = ExportToJson(htmlContent, doc, allProducts);
+        //json = ExportToJson(htmlContent, node, allProducts);
 
 
 
@@ -344,6 +377,26 @@ public class HtmlProductExtractor
                 }
                 await _context.SaveChangesAsync();
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Picture OFF");
+
+
+                await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.ProductTemplate ON");
+                foreach (var entity in productTemplates)
+                {
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.ProductTemplates.Any(item => item.Name == entity.Name))  // or attributeName.Id == Guid.Empty for Guid keys
+                    {
+                        // Case 1: NEW Entity
+                        _context.ProductTemplates.Add(entity);
+                    }
+                    else
+                    {
+                        //// Case 2: UPDATED Entity
+                        //_context.Products.Update(entity);
+                        //_context.Entry(entity).Property<string>(entity.Name).IsModified = true;
+                    }
+                }
+                await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.ProductTemplate OFF");
 
 
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Product ON");
@@ -497,9 +550,9 @@ public class HtmlProductExtractor
 
             string json;
 
-            //Console.WriteLine("private List<ProductHeader> = ");
+            //Console.WriteLine("private List<ProdRowTmp> = ");
             Console.WriteLine("const productHeadersocmodel = ");
-            json = SerializeToJson(headers);
+            json = SerializeToJson(prodRowTmps);
             Console.WriteLine(json + ";");
 
 
@@ -615,14 +668,14 @@ public class HtmlProductExtractor
     /// </summary>
     /// <param name="doc"></param>
     /// <returns></returns>
-    private List<Product> ExtractProductsFromHtml(HtmlDocument doc)
+    private List<Product> ExtractProductsFromHtml(HtmlDocument doc, string productName)
     {
         // Parent product
         var productNode = doc.DocumentNode
                              .SelectSingleNode("//div[@id='product']");
 
         // Select all tables relevant to products/variants/associated products
-        var parent = ExtractParentProduct(productNode);
+        var parent = ExtractParentProduct(productNode, productName);
         lastDbProductDisplayOrder = _context.Products.Where(p => p.ParentGroupedProductId == parent.Id)
                                                  .MaxAsync(e => (int?)e.DisplayOrder).Result ?? 0;
 
@@ -639,6 +692,8 @@ public class HtmlProductExtractor
         string specOption = "";
         int i = 0;
         Product variant = default;
+
+
 
         foreach (var table in allTables)
         {
@@ -707,17 +762,14 @@ public class HtmlProductExtractor
         return decimal.TryParse(cleaned, out decimal result) ? result : 0m;
     }
 
-    private List<ProductHeader> ExtractDynamicHeaders(string htmlContent)
+    private List<ColumnStyle> ExtractProductColumnStyle(HtmlNode table)
     {
-        var doc = new HtmlAgilityPack.HtmlDocument();
-        doc.LoadHtml(htmlContent);
+        var rowColmStyles = new List<ColumnStyle>();
 
-
-        var table = doc.DocumentNode.SelectSingleNode("//table[contains(@class,'description')]");
-        if (table == null) return headers;
+        if (table == null) return rowColmStyles;
 
         var row = table.SelectSingleNode(".//tr");
-        if (row == null) return headers;
+        if (row == null) return rowColmStyles;
 
         var tds = row.Elements("td").ToList();
 
@@ -737,31 +789,74 @@ public class HtmlProductExtractor
                     style = childWithStyle.GetAttributeValue("style", "");
             }
 
-            headers.Add(new ProductHeader
+            rowColmStyles.Add(new ColumnStyle
             {
-                ColumnIndex = i,
+                DisplayOrder = i,
                 CssClass = css,
                 Style = style,
-                ParentTableStyle = table.GetAttributeValue("style", "")
             });
         }
-
-        return headers;
+        return rowColmStyles;
     }
 
+    private int GetPageTemplate(HtmlNode node, Product product)
+    {
+        var titleNode = node.SelectSingleNode("//div[@class ='productHeaderBar']");
+
+        string titleBgImg = titleNode.SelectSingleNode("//td//img")?
+                                     .GetAttributeValue("src", "") ?? "";
+
+
+        var headerTbl = node.SelectSingleNode("..//div[@id='pricing']/table");
+        var cssClass = headerTbl.GetAttributeValue("class", "");
+        var headerTmp = headerTbl.SelectSingleNode("//td[contains(@class,'was5') and contains(@class,'special')]") == null ? ProdGropupHeaders.GRP1.ToString() + cssClass : ProdGropupHeaders.GRP2.ToString() + cssClass;
+
+        PageTmp template = new PageTmp { TitleBgImg = titleBgImg, CssClass = cssClass, HeaderTmp = headerTmp };
+        var viewPath = SerializeToJson(template)?.ReplaceLineEndings("");
+
+        return GetProductTmp(headerTmp, viewPath);
+
+    }
+
+    private int GetProductTmp(string name, string viewPath)
+    {
+        var producttemplate = productTemplates.FirstOrDefault(tml => tml.Name == name);
+        producttemplate ??= _context.ProductTemplates.FirstOrDefault(tml => tml.Name == name);
+
+        if (producttemplate == null)
+        {
+            lastProductTemplateId = lastProductTemplateId == 0 ? ++lastDbProductTemplateId : ++lastProductTemplateId;
+            producttemplate = new ProductTemplate
+            {
+                Id = lastProductTemplateId,
+                Name = name,
+                DisplayOrder = 0,
+                ViewPath = viewPath
+            };
+            productTemplates.Add(producttemplate);
+        }
+        return producttemplate.Id;
+    }
+
+
+
     // 3️⃣ Serialize to JSON
-    private Product ExtractParentProduct(HtmlNode element)
+    private Product ExtractParentProduct(HtmlNode element, string productName)
     {
 
         Product product = default;
-
         // Find matching attribute
         var prod = products.FirstOrDefault(a => a.Sku.Equals(ProductSku, StringComparison.OrdinalIgnoreCase));
         prod ??= _context.Products.FirstOrDefault(a => a.Sku.ToLower().Equals(ProductSku.ToLower()));
         if (prod == null)
         {
             lastProductId = (lastProductId == 0 ? lastDbProductId : lastProductId) + 1;
-            product = new Product { Id = lastProductId, ParentGroupedProductId = 10, Published = true };
+            product = new Product { Id = lastProductId, ParentGroupedProductId = 10, Published = true, Name = productName };
+
+            //Extract product grouping header
+            var producttemplateId = GetPageTemplate(element, product);
+            product.ProductTemplateId = producttemplateId;
+
             //get parent Produt Name
             GetPropertiesFromHtml(element, ref product, "h1", "h1");
 
@@ -779,6 +874,7 @@ public class HtmlProductExtractor
             product.ProductTypeId = 10; // Group Parent
             product.DisplayOrder = 0; // Optional: set if needed
             product.CreatedOnUtc = DateTime.UtcNow;
+
             products.Add(product);
             lastParentProduct = product;
         }
@@ -788,11 +884,10 @@ public class HtmlProductExtractor
             lastParentProduct = prod;
         }
 
-
         var specName = SpecificationTypes.ProductGrouping1.ToString();
         var groupName = SpecificationTypes.ProductGrouping1.ToString();
 
-        var tables = element.SelectNodes($"//table[contains(@class,'{headerTblCss}')]");
+        var tables = element.SelectNodes($"//div[@id ='pricing']//table[@class ='{headerTblCss}']");
         foreach (var table in tables)
         {
             var attrOption = table.SelectSingleNode(".//td")?.InnerText;
@@ -800,6 +895,7 @@ public class HtmlProductExtractor
             {
                 ExtractProductSpecificationMappings(specName, attrOption, product);
             }
+
         }
 
         return product;
@@ -954,6 +1050,7 @@ public class HtmlProductExtractor
         {
             throw new Exception("Parent Product is missing");
         }
+
         // SKU
         var skuNode = table.SelectSingleNode(".//td[contains(@class,'model')]");
         if (skuNode == null)
@@ -966,7 +1063,7 @@ public class HtmlProductExtractor
         {
             productSku = skuNode.InnerText.Trim();
         }
-        else if(isAssociated==true)
+        else if (isAssociated == true)
         {
             throw new Exception();
         }
@@ -1013,7 +1110,8 @@ public class HtmlProductExtractor
                 // Price
                 var priceNodes = table.SelectNodes(".//td[contains(@class,'price')]");
                 product.Price = 0;
-                foreach (var priceNode in priceNodes) { 
+                foreach (var priceNode in priceNodes)
+                {
                     if (priceNode != null)
                     {
                         var priceText = priceNode.InnerText.Replace("$", "").Trim();
@@ -1027,13 +1125,17 @@ public class HtmlProductExtractor
                                 product.Price = p;
                             }
                         }
-
-
-                       
-                        
                     }
                 }
             }
+
+
+            var rowColumnStyles = ExtractProductColumnStyle(table);
+            var productTmpName = $"{rowColumnStyles.Count}CT";
+            var viewPath = SerializeToJson(rowColumnStyles);
+
+            var producttemplateId = GetProductTmp(productTmpName, viewPath);
+            product.ProductTemplateId = producttemplateId;
 
             products.Add(product);
         }
@@ -1044,7 +1146,7 @@ public class HtmlProductExtractor
         var cells = row.SelectNodes("td");
         string specName = string.Empty;
         var cellColumnIndex = 1;
-        if(table.SelectNodes(".//tr/td").Count == 8) cellColumnIndex =2;
+        if (table.SelectNodes(".//tr/td").Count == 8) cellColumnIndex = 2;
         if (cells[cellColumnIndex] != null)
         {
             specName = cells[cellColumnIndex].InnerText;
@@ -1087,10 +1189,10 @@ public class HtmlProductExtractor
         }
     }
     private void CreateAttributeFromText(HtmlNode row, Product product)
-    { 
+    {
         var allColumnNumber = row.SelectNodes(".//td[not(contains(@class,'price') or contains(@class,'QTY') or contains(@class,'pick')) ]")?.Count ?? 0;
         int cellAttrIndex = 0;
- 
+
 
         if (row.SelectSingleNode(".//td[1]")?.InnerText == product.Sku)
         {
@@ -1101,12 +1203,12 @@ public class HtmlProductExtractor
             cellAttrIndex = 4;
         }
 
-        int maxAttrColumns = (allColumnNumber == 4? 1:2);
+        int maxAttrColumns = (allColumnNumber == 4 ? 1 : 2);
 
         int attributeIndex = 0;
         for (int i = cellAttrIndex; i < cellAttrIndex + maxAttrColumns; i++)
         {
-           
+
             var attrSelectNode = row.SelectSingleNode($".//td[{i}]//select");
             if (attrSelectNode == null)
             {
@@ -1168,10 +1270,14 @@ public class HtmlProductExtractor
     private void CreateGroupingSpecifications(string groupName, string specName, HtmlDocument doc)
     {
         var allTables = doc.DocumentNode.SelectNodes("id('pricing')//table");
+        if (allTables == null)
+        {
+            throw new Exception("No specification tables found.");
+        }
 
         headerTblCss = allTables[0].Attributes["class"]?.Value;
 
-        //var allTables = doc.DocumentNode
+        //var allTables = node.DocumentNode
         //    .SelectNodes("//table[contains(@class,'" + headerTblCss + "')]")
         //    ?.ToList();
 
@@ -1381,7 +1487,7 @@ public class HtmlProductExtractor
                             .FirstOrDefault(a => a.Name.ToLower().Equals(attributeName.ToLower()));
         // If no match found, continue
         if (attribute == null)
-            attribute = CreateHtmlSelecAtttribute(attributeName) ;
+            attribute = CreateHtmlSelecAtttribute(attributeName);
 
         // Create or reuse product-attribute mapping
         var mapping = productProductAttributeMappings.FirstOrDefault(m =>
@@ -1556,6 +1662,9 @@ public class HtmlProductExtractor
 
                 // Extract description (text after the <b>...</b>)
                 var descText = assocDetail?.Replace(attrName, "").Trim();
+                if (string.IsNullOrEmpty(descText))
+                    continue;
+
                 int index = descText.IndexOf('$');
 
                 if (index > -1)
@@ -1611,7 +1720,7 @@ public class HtmlProductExtractor
 
 
 
-    public void ExtractWholePartsSimplified(string dimensionString)
+    private void ExtractWholePartsSimplified(string dimensionString)
     {
         // 1. Split the string by the separator " x "
         // We use StringSplitOptions.None for simplicity, but it's important to specify the string separator.
@@ -1657,7 +1766,7 @@ public class HtmlProductExtractor
 
     }
 
-    public async Task UpdateDbAsync<TEntity>(string sqlTableName, List<TEntity> entitiesToProcess, bool exists = false) where TEntity : class
+    private async Task UpdateDbAsync<TEntity>(string sqlTableName, List<TEntity> entitiesToProcess, bool exists = false) where TEntity : class
     {
 
         if (!exists)

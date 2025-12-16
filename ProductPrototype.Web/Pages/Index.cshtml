@@ -1,34 +1,57 @@
 ﻿@page
 @using ProductPrototype.DbAccess;
+@using ProductPrototype.DbAccess.Data.ModelDto
 @using ProductPrototype.DbAccess.Data.Models
 
 @model IndexModel
 @{
     ViewData["Title"] = "Home page";
 
-    var productInfo = Model.ProductDetails.Where(prod => prod.ParentGroupedProductId == 0)
-                                          .FirstOrDefault();
+    List<ProductDetailDto> variants = default;
+    List<ProductAttributeValue> productAttributeValues = default;
+    string prodGrp_Template = Model.HeaderTemlate ;
+
+
+    string bgImage = string.Empty;
 
     string fullDescription = string.Empty;
 
 
-    fullDescription = Html.Raw(productInfo?.FullDescription
-                      ?.Replace("{short-description}", productInfo.ShortDescription)
-                      ?.Replace("{product-header-title}", productInfo.Name)) + "";
+    if (Model.ProductDetails != null)
+    {
+        var productInfo = Model.ProductDetails.Where(prod => prod.ParentGroupedProductId == 0)
+                                              .FirstOrDefault();
 
-    List<ProductAttributeValue> productAttributeValues = default;
-    if (Model.ProductDetails?.Count()>1){
 
-        productAttributeValues = Model?.ProductDetails?
-                                 .ElementAtOrDefault(1)? // Safely gets item at index 0
-                                 .ProductAttributes?
-                                 .ElementAtOrDefault(0)? // Safely gets item at index 0 of list2
-                                 .ProductAttributeValues;
+
+
+        fullDescription = Html.Raw(productInfo?.FullDescription
+                          ?.Replace("{short-description}", productInfo.ShortDescription)
+                          ?.Replace("{product-header-title}", productInfo.Name)) + "";
+
+
+        if (Model.ProductDetails?.Count() > 1)
+        {
+
+            productAttributeValues = Model?.ProductDetails?
+                                     .ElementAtOrDefault(1)? // Safely gets item at index 0
+                                     .ProductAttributes?
+                                     .ElementAtOrDefault(0)? // Safely gets item at index 0 of list2
+                                     .ProductAttributeValues;
+
+        }
+
+        variants = Model.ProductDetails;
+        if (!string.IsNullOrEmpty(Request.Query["id"]))
+        {
+            var parengProductId = Request.Query["id"];
+
+            var viewPath = Model.ProductDetails
+                .FirstOrDefault(prod => prod.ParentGroupedProductId == parengProductId || prod.Id == parengProductId)
+                ?.ProductTemplate?.ViewPath;
+        }
 
     }
-
-    var variants = Model.ProductDetails;
-    var bgImage = Model.ProductTemplates.TableHeaderBackgroud;
 }
 
 @section Styles {
@@ -274,22 +297,36 @@
                     {
                        var prodHeader = prod.specificationOptionName.split("|");
                        let headerData = null;
+                       
+                       const headerTemplate = @Html.Raw(prodGrp_Template);
+                       let cssClass = headerTemplate.CssClass;
+                       $(".productHeaderBar img").attr(headerTemplate.TitleBgImg);
                        if(prodHeader.length > 1)
                            headerData =
                             {
                                 name1: prodHeader[0],
                                 name2: prodHeader[1],
-                                bgImg: "@bgImage"
+                                cssClass: cssClass
                             };
                         else
                           headerData =
                             {
                                 name1: prod.specificationOptionName,
                                 name2: "",
-                                bgImg: "@bgImage"
+                                cssClass: cssClass
                             };
+                      
+                        let prodGrp_Template = null;
                         
-                        const productHeaderHtml = productGroupHeader_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match); //productGroupHeaderWithDiscount_Template
+
+                        if(headerTemplate.HeaderTmp.indexOf("GRP1")>=0){
+                            prodGrp_Template = productGroupHeader_Template;
+                        }else if(headerTemplate.HeaderTmp.indexOf("GRP2")>=0)
+                        {
+                            prodGrp_Template = productGroupHeaderWithDiscount_Template;
+                        }
+
+                        const productHeaderHtml = prodGrp_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
                         $tbody.append(productHeaderHtml);
                     }
                     else

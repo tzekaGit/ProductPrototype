@@ -18,8 +18,16 @@ public class ProductService : IProductService
         _context = context;
     }
 
-    public async Task<List<ProductDetailDto>> GetProductDetailsAsync(int parentId)
+    public async Task<List<ProductDetailDto>> GetProductDetailsAsync(int parentId, string sku)
     {
+        if (!string.IsNullOrEmpty(sku))
+        {
+            parentId = (from product in _context.Products
+                        where product.Sku == sku
+                        select product.Id)
+                                .FirstOrDefault();
+        }
+
         // ⭐️ The query is executed against the injected _context object ⭐️
         var productDetails = await (from product in _context.Products
                                         // Inner Join setup
@@ -129,7 +137,7 @@ public class ProductService : IProductService
     public async Task<List<Product>> GetRelatedProductDetailAsync(int productId)
     {
 
-        var relatedProductDetails = await (from  product in _context.Products
+        var relatedProductDetails = await (from product in _context.Products
                                            join related in _context.RelatedProducts on product.Id equals related.ProductId2
                                            where related.ProductId1 == productId
                                            select new Product
@@ -146,8 +154,24 @@ public class ProductService : IProductService
                                                FullDescription = product.FullDescription,
                                                ShortDescription = product.ShortDescription,
                                            })
-                                     
+
                                            .ToListAsync();
         return relatedProductDetails;
+    }
+    public async Task<ProductTemplate> GetProductTemplateAsync(int productId)
+    {
+
+        var productTemplate = (from product in _context.Products
+                               join template in _context.ProductTemplates on product.ProductTemplateId equals template.Id
+                               where product.Id == productId
+                               select new ProductTemplate
+                               {
+                                   Id = template.Id,
+                                   Name = template.Name,
+                                   ViewPath = template.ViewPath
+                               })
+                               .FirstOrDefault();
+
+        return productTemplate;
     }
 }

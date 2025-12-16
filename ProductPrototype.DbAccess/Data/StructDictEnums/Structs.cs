@@ -8,7 +8,7 @@
         public ProductTemplates()
         {
             TitleBackground = "./Images/phPicnic.jpg";
-            TableHeaderBackgroud = "./Images/pbSale.jpg"; // "./Images/pbPark.jpg"; //"./Images/pbPicnic.jpg";
+            TableHeaderBackgroud = "./Images/pbPicnic.jpg";//./Images/pbPark.jpg"; //"./Images/pbPicnic.jpg";
         }
 
 

@@ -1,11 +1,12 @@
 ﻿const productGroupHeader_Template = `
-    <tr style="background: url('{bgImg}')">
+    <tr class="{cssClass}">
        <td class="item" colspan="6" class = "ptExpanded2"><h2 class="px13"> {name1} | <span class="cffff00">{name2}</span></h2></td>
        <td class="qty">Qty</td>
     </tr>
 `;
+
 const productGroupHeaderWithDiscount_Template = `
-        <tr style="background: url('{bgImg}')">
+        <tr class="{cssClass}">
             <td class="itemSpecial440" colspan="4"><h2 class="px13">{name1} <span class="cffff00"> |{name2}</span></h2></td>
             <td class="was50">Was</td>
             <td class="special75">Special</td>
@@ -48,6 +49,7 @@ const seven_Column_Template = `
         <td class="entry"><input name="QTY{i}" size="2" maxlength="6" style="text-align: center;" class="qty_box" /></td>
       </tr>
 `;
+
 seven_Column_WithOldPrice_Template = `
     <tr>
 		    <td class="model125">{sku}</td>
