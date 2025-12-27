@@ -772,7 +772,7 @@ public class HtmlProductExtractor
         if (row == null) return rowColmStyles;
 
         var tds = row.Elements("td").ToList();
-
+        string bgImg = string.Empty;
         for (int i = 0; i < tds.Count; i++)
         {
             var td = tds[i];
