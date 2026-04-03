@@ -44,19 +44,13 @@ public enum SpecificationTypes
 
 public enum ProdGropupHeaders
 {
-    GRP1,
-    GRP2
+    T5Cell,
+    T6Cell,
+    T7Cell,
+    T8Cell
+
 }
 
-
-
-public class Dimension()
-{
-    public string SpecificationOptionKey { get; set; }
-    public decimal Length { get; set; }
-    public decimal Width { get; set; }
-    public decimal Height { get; set; }
-}
 
 
 public class HtmlProductExtractor
@@ -80,7 +74,6 @@ public class HtmlProductExtractor
 
     private List<Picture> pictures = new();
     private List<ProductPictureMapping> productPictureMappings = new();
-    private List<Dimension> dimensions = new();
     private List<ProductTemplate> productTemplates = new();
 
     //template
@@ -235,8 +228,26 @@ public class HtmlProductExtractor
 
         ////Export to JSON Format 
         //json = ExportToJson(htmlContent, node, allProducts);
+        List<UrlRecord> UrlRecords = new();
+        int lastUrlRecordId = await _context.UrlRecords.MaxAsync(e => (int?)e.Id) ?? 0;
 
+        foreach (var prod in allProducts)
+        {
+            if (_context.UrlRecords.Any(url => url.EntityId == prod.Id))
+                continue;
+            {
 
+                UrlRecords.Add(new UrlRecord
+                {
+                    Id = ++lastUrlRecordId,
+                    EntityId = prod.Id,
+                    EntityName = "Product",
+                    Slug = prod.Sku == productName ? productName.ToLower() : $"{productName}-{prod.Sku}".ToLower(),
+                    IsActive = true,
+                    LanguageId = 0,
+                });
+            }
+        }
 
         Console.WriteLine("✅ .Database.Begin Transaction Async");
 
@@ -260,7 +271,7 @@ public class HtmlProductExtractor
                     }
                     else
                     {
-                        //// Case 2: UPDATED Entity
+                        //// Case 2: UPDATED CT
                         //_context.ProductAttributes.Update(entity);
                         //var entry = _context.Entry(entity);
                         //entry.State = EntityState.Modified;
@@ -379,11 +390,12 @@ public class HtmlProductExtractor
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Picture OFF");
 
 
+
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.ProductTemplate ON");
                 foreach (var entity in productTemplates)
                 {
                     // 1. Check if the attributeName is NEW or UPDATED based on its ID
-                    if (!_context.ProductTemplates.Any(item => item.Name == entity.Name))  // or attributeName.Id == Guid.Empty for Guid keys
+                    if (!_context.ProductTemplates.Any(item => item.Id == entity.Id))  // or attributeName.Id == Guid.Empty for Guid keys
                     {
                         // Case 1: NEW Entity
                         _context.ProductTemplates.Add(entity);
@@ -417,6 +429,26 @@ public class HtmlProductExtractor
                 }
                 await _context.SaveChangesAsync();
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Product OFF");
+
+                await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.UrlRecord ON");
+                foreach (var entity in UrlRecords)
+                {
+                    // 1. Check if the attributeName is NEW or UPDATED based on its ID
+                    if (!_context.UrlRecords.Any(item => item.Id == entity.Id))  // or attributeName.Id == Guid.Empty for Guid keys
+                    {
+                        // Case 1: NEW Entity
+                        _context.UrlRecords.Add(entity);
+                    }
+                    else
+                    {
+                        //// Case 2: UPDATED Entity
+                        //_context.Products.Update(entity);
+                        //_context.Entry(entity).Property<string>(entity.Name).IsModified = true;
+                    }
+                }
+                await _context.SaveChangesAsync();
+                await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.UrlRecord OFF");
+
 
                 await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.Product_ProductAttribute_Mapping ON");
                 foreach (var entity in productProductAttributeMappings)
@@ -714,10 +746,10 @@ public class HtmlProductExtractor
                 {
                     variant = ExtractProduct(table, i);
                     ExtractProductSpecificationMappings(specName, specOption, variant);
-                    // Assign product picture
-                    GetPropertiesFromHtml(productNode, ref variant, "class/img", "leftL,leftR");
+                    //// Assign product picture
+                    // GetPropertiesFromHtml(productNode, ref variant, "class/img", "leftL,leftR");
                 }
-                else if (!(table.InnerHtml.Contains("Custom Lettering") || table.InnerHtml.Contains("Custom Custom Message") || table.InnerHtml.Contains("L2000")))
+                else if (columnCount <= 4)
                 {
                     // skip next element since it’s the associated product
                     var assoc = ExtractProduct(table, i, isAssociated: true);
@@ -762,14 +794,22 @@ public class HtmlProductExtractor
         return decimal.TryParse(cleaned, out decimal result) ? result : 0m;
     }
 
-    private List<ColumnStyle> ExtractProductColumnStyle(HtmlNode table)
+    private (List<ColumnStyle> rowColumnStyles, string trClass, string cssName) ExtractProductColumnStyle(HtmlNode table)
     {
         var rowColmStyles = new List<ColumnStyle>();
 
-        if (table == null) return rowColmStyles;
+        if (table == null) return (rowColmStyles, string.Empty, string.Empty);
 
         var row = table.SelectSingleNode(".//tr");
-        if (row == null) return rowColmStyles;
+        if (row == null) return (rowColmStyles, string.Empty, string.Empty);
+
+        var trClass = row.ParentNode
+                         .GetAttributeValue("class", "") ?? "";
+
+        var trStyle = row.ParentNode
+                         .GetAttributeValue("style", "") ?? "";
+
+        AddNewTemplate(rowColmStyles, 0, trClass, trStyle);
 
         var tds = row.Elements("td").ToList();
         string bgImg = string.Empty;
@@ -779,6 +819,18 @@ public class HtmlProductExtractor
 
             // Collect only <th>-related metadata (visuals & structure)
             string css = td.GetAttributeValue("class", "");
+
+            //
+            if (td.SelectSingleNode(".//img") != null)
+            {
+                bgImg = td.SelectSingleNode(".//img")
+                          ?.GetAttributeValue("src", "")
+                          ?.Replace("/Images/", "")
+                          ?.Split(".")[0] ?? string.Empty;
+                bgImg = "bgImg_" + bgImg;
+
+                css = $"{css} {bgImg}";
+            }
             string style = td.GetAttributeValue("style", "");
 
             // If no style, fallback to first child element with style
@@ -789,6 +841,12 @@ public class HtmlProductExtractor
                     style = childWithStyle.GetAttributeValue("style", "");
             }
 
+            AddNewTemplate(rowColmStyles, i, css, style);
+        }
+        return (rowColmStyles, trClass, bgImg);
+
+        static void AddNewTemplate(List<ColumnStyle> rowColmStyles, int i, string css, string style)
+        {
             rowColmStyles.Add(new ColumnStyle
             {
                 DisplayOrder = i,
@@ -796,32 +854,34 @@ public class HtmlProductExtractor
                 Style = style,
             });
         }
-        return rowColmStyles;
     }
 
     private int GetPageTemplate(HtmlNode node, Product product)
     {
         var titleNode = node.SelectSingleNode("//div[@class ='productHeaderBar']");
 
-        string titleBgImg = titleNode.SelectSingleNode("//td//img")?
+        string titleBgImg = titleNode.SelectSingleNode(".//td//img")?
                                      .GetAttributeValue("src", "") ?? "";
 
 
         var headerTbl = node.SelectSingleNode("..//div[@id='pricing']/table");
+        var headerCells = headerTbl.SelectNodes(".//td")?.Count;
         var cssClass = headerTbl.GetAttributeValue("class", "");
-        var headerTmp = headerTbl.SelectSingleNode("//td[contains(@class,'was5') and contains(@class,'special')]") == null ? ProdGropupHeaders.GRP1.ToString() + cssClass : ProdGropupHeaders.GRP2.ToString() + cssClass;
+        var prodtbl = node.SelectSingleNode("//table[contains(@class, 'description')]");
+        var tblColNumb = prodtbl.SelectNodes("./tr/td").Count();
+        var headerTmp = $"{tblColNumb}TCell.{headerCells}HCell.{cssClass}";
 
         PageTmp template = new PageTmp { TitleBgImg = titleBgImg, CssClass = cssClass, HeaderTmp = headerTmp };
-        var viewPath = SerializeToJson(template)?.ReplaceLineEndings("");
+        var templateStyle = SerializeToJson(template)?.ReplaceLineEndings("");
 
-        return GetProductTmp(headerTmp, viewPath);
+        return GetProductTmp(headerTmp, templateStyle, viewPath: "ProductTemplate.Grouped");
 
     }
 
-    private int GetProductTmp(string name, string viewPath)
+    private int GetProductTmp(string name, string templateStyle, string viewPath)
     {
-        var producttemplate = productTemplates.FirstOrDefault(tml => tml.Name == name);
-        producttemplate ??= _context.ProductTemplates.FirstOrDefault(tml => tml.Name == name);
+        var producttemplate = productTemplates.FirstOrDefault(tml => tml.Name == name && tml.TemplateStyle == templateStyle);
+        producttemplate ??= _context.ProductTemplates.FirstOrDefault(tml => tml.Name == name && tml.TemplateStyle == templateStyle);
 
         if (producttemplate == null)
         {
@@ -831,7 +891,8 @@ public class HtmlProductExtractor
                 Id = lastProductTemplateId,
                 Name = name,
                 DisplayOrder = 0,
-                ViewPath = viewPath
+                ViewPath = viewPath,
+                TemplateStyle = templateStyle
             };
             productTemplates.Add(producttemplate);
         }
@@ -851,7 +912,19 @@ public class HtmlProductExtractor
         if (prod == null)
         {
             lastProductId = (lastProductId == 0 ? lastDbProductId : lastProductId) + 1;
-            product = new Product { Id = lastProductId, ParentGroupedProductId = 10, Published = true, Name = productName };
+            product = new Product
+            {
+                Id = lastProductId,
+                ParentGroupedProductId = 0,
+                ProductTypeId = 10,
+                OrderMinimumQuantity = 1,
+                OrderMaximumQuantity = 10,
+                Published = true,
+                Deleted = false,
+                Name = productName,
+                ShowOnHomepage = true,
+                AvailableStartDateTimeUtc = DateTime.UtcNow,
+            };
 
             //Extract product grouping header
             var producttemplateId = GetPageTemplate(element, product);
@@ -859,9 +932,6 @@ public class HtmlProductExtractor
 
             //get parent Produt Name
             GetPropertiesFromHtml(element, ref product, "h1", "h1");
-
-            //get products dimensions
-            GetPropertiesFromHtml(element, ref product, "div/class", "dim");
 
             //get parent Full description
             GetPropertiesFromHtml(element, ref product, "class", "wrapper");
@@ -874,7 +944,11 @@ public class HtmlProductExtractor
             product.ProductTypeId = 10; // Group Parent
             product.DisplayOrder = 0; // Optional: set if needed
             product.CreatedOnUtc = DateTime.UtcNow;
-
+            if (producttemplateId == 0)
+            {
+                throw new Exception("Product Template Id is missing");
+            }
+            ;
             products.Add(product);
             lastParentProduct = product;
         }
@@ -991,7 +1065,7 @@ public class HtmlProductExtractor
                 elementNode = element.SelectSingleNode("//div[@id ='" + selectVal + "']");
                 if (selectVal == "product")
                 {
-                    product.FullDescription = elementNode?.InnerHtml;
+                    product.FullDescription = Cleantext(elementNode?.InnerHtml);
                 }
 
                 break;
@@ -999,11 +1073,14 @@ public class HtmlProductExtractor
             case "class":
 
                 elementNode = element.SelectSingleNode("//div[@class ='" + selectVal + "']//div//h2");
-                var descriptionNode = elementNode.ParentNode; // elementNode.SelectSingleNode("//div[contains(concat(' ', normalize-space(@class), ' '), ' leftL ') or contains(concat(' ', normalize-space(@class), ' '), ' leftR ')]//h2");
 
-                var shortDecsNode = descriptionNode.ParentNode.SelectSingleNode("//p");
-                product.ShortDescription = shortDecsNode?.InnerText;
-                shortDecsNode?.InnerHtml = "{short-description}";
+                if (elementNode != null)
+                {
+                    var descriptionNode = elementNode.ParentNode; // elementNode.SelectSingleNode("//div[contains(concat(' ', normalize-space(@class), ' '), ' leftL ') or contains(concat(' ', normalize-space(@class), ' '), ' leftR ')]//h2");
+                    var shortDecsNode = descriptionNode.ParentNode.SelectSingleNode("//p");
+                    product.ShortDescription = Cleantext(shortDecsNode?.InnerText);
+                    shortDecsNode?.InnerHtml = "{short-description}";
+                }
 
                 var colorOptions = element.SelectNodes("//div[@class ='" + selectVal + "']//img[contains(@src, '-CC-') or contains(@src, '-BT-') ]");
                 if (colorOptions == null || colorOptions.Count == 0)
@@ -1083,11 +1160,19 @@ public class HtmlProductExtractor
                 Sku = productSku,
                 Name = lastParentProduct.Name + "-" + productSku,
                 Published = true,
+                Deleted = false,
                 ProductTypeId = 5,
                 CreatedOnUtc = DateTime.UtcNow,
                 UpdatedOnUtc = DateTime.UtcNow,
+                OrderMinimumQuantity = 1,
+                OrderMaximumQuantity = 10,
+                ShowOnHomepage = true,
+                AvailableStartDateTimeUtc = DateTime.UtcNow,
                 DisplayOrder = lastDbProductDisplayOrder      // Optional: can set based on element order
             };
+
+            Console.WriteLine($"assoc=>{isAssociated}, {product.ParentGroupedProductId}");
+
             if (isAssociated)
             {
                 ExtractAssociatedProducts(table, ref product);
@@ -1130,13 +1215,19 @@ public class HtmlProductExtractor
             }
 
 
-            var rowColumnStyles = ExtractProductColumnStyle(table);
-            var productTmpName = $"{rowColumnStyles.Count}CT";
-            var viewPath = SerializeToJson(rowColumnStyles);
+            (var rowColumnStyles, string rowClass, string cssName) = ExtractProductColumnStyle(table);
 
-            var producttemplateId = GetProductTmp(productTmpName, viewPath);
+            var productTmpName = $"{rowColumnStyles.Count - 1}TCell.{cssName}.{rowClass}";
+            var templateStyle = SerializeToJson(rowColumnStyles).ReplaceLineEndings(""); ;
+
+            var producttemplateId = GetProductTmp(productTmpName, templateStyle, viewPath: "ProductTemplate.Simple");
+            if (producttemplateId == 0)
+            {
+                throw new Exception("Product Template Id is missing");
+            }
+            ;
             product.ProductTemplateId = producttemplateId;
-
+            Console.WriteLine(product.ParentGroupedProductId);
             products.Add(product);
         }
 
@@ -1703,7 +1794,7 @@ public class HtmlProductExtractor
         return match.Success ? decimal.Parse(match.Value) : 0m;
     }
 
-    private string SerializeToJson(object data)
+    public string SerializeToJson(object data)
     {
         if (data is IEnumerable<object> collection)
         {
@@ -1718,75 +1809,10 @@ public class HtmlProductExtractor
         return JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
     }
 
-
-
-    private void ExtractWholePartsSimplified(string dimensionString)
+    private string Cleantext(string text)
     {
-        // 1. Split the string by the separator " x "
-        // We use StringSplitOptions.None for simplicity, but it's important to specify the string separator.
-        string[] dimension = dimensionString.Split(new string[] { " - " }, StringSplitOptions.None);
-
-        if (dimension.Length == 2)
-            dimension = dimension[1].Split(new string[] { " x " }, StringSplitOptions.None);
-
-        if (dimension.Length != 3)
-        {
-            Console.WriteLine("Error: String structure is unexpected. Could not find 3 dimensions.");
-        }
-
-        // --- 2. Extract and Clean Each Part ---
-
-        // Part 1: "72"L"
-        string lengthStr = dimension[0].Replace("&quot;L", "")
-                                       .Replace("'L", "");
-        decimal length = decimal.Parse(lengthStr);
-
-        // Part 2: "22"W"
-        string widthStr = dimension[1].Replace("&quot;W", "");
-        decimal width = decimal.Parse(widthStr);
-
-        // Part 3: "35-3/16"H" 
-        string heightValueStr = dimension[2].Replace("&quot;H", "");
-
-        // --- 3. Extract the Whole Part of Height ---
-
-        // The height string is now "35-3/16". We split it at the first hyphen.
-        string wholeHeightStr = heightValueStr.Split('-')[0];
-        decimal height = decimal.Parse(wholeHeightStr);
-        //var keys = dimensionString.Split("-");
-        //var key = (keys?.Count() > 0 ? keys[0].ToString() : "");
-
-        //dimensions.Add(new Dimension
-        //{
-        //    SpecificationOptionKey = key,
-        //    Length = length,
-        //    Width = width,
-        //    Height = height
-        //});
-
-    }
-
-    private async Task UpdateDbAsync<TEntity>(string sqlTableName, List<TEntity> entitiesToProcess, bool exists = false) where TEntity : class
-    {
-
-        if (!exists)
-        {
-            await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.{sqlTableName} ON");
-        }
-
-        foreach (var entity in entitiesToProcess)
-        {
-            _context.Update(entity); // Works for both detached Add and Update states
-        }
-
-        // Execute all changes against the database
-        await _context.SaveChangesAsync();
-
-        if (!exists)
-        {
-            await _context.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT dbo.{sqlTableName} OFF");
-        }
-
+        var cleantext = text.ReplaceLineEndings().Trim();
+        return Regex.Replace(cleantext, @"\s+", " ");
 
     }
 }

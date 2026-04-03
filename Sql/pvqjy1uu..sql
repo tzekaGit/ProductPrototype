@@ -1,19 +1,29 @@
 /*
-	delete from product where Id>3
+	delete from product --where Id>3
 	delete from RelatedProduct
-	delete from picture where Id>80
-	delete from [ProductAttribute] where Id>9
-	delete from specificationAttributeGroup where Id>1
+	delete from picture --where Id>80
+	delete from [ProductAttribute] --where Id>9
+	delete from specificationAttributeGroup --where Id>1
+	delete from picture where seofilename ='/Images/942SM-V6-001-M.jpg'
+	delete from producttemplate
+	delete from UrlRecord
 */
 
 select * from ProductAttribute
-select ParentGroupedProductId, ProductTypeId, DisplayOrder, price, 
-* from product where Sku = 'E-Series-Steel-Picnic-Table-Rectangular'
+select ParentGroupedProductId, ProductTypeId
+, DisplayOrder
+, price
+, ShowOnHomepage
+, OrderMaximumQuantity
+,* from product where Sku = 'E-Series-Steel-Picnic-Table-Rectangular'
 
 select  * from RelatedProduct where productid1 = 8 //26
 
+select * from ProductTemplate
+select * from UrlRecord
+
 select  * from  CrossSellProduct
-select * from picture where SeoFilename like '%/Images/238-EV6-001-M.jpg%'
+select * from picture where SeoFilename like '%electronics%'
 
 
 select * from [dbo].[Product_Picture_Mapping]

@@ -1,4 +1,5 @@
 ﻿using ProductPrototype.DbAccess.Data.ModelDto;
+using ProductPrototype.DbAccess.Data.Models;
 using ProductPrototype.DbAccess.Interfaces;
 using ProductPrototype.DbAccess.Services;
 
@@ -21,6 +22,7 @@ public class GetDataFromDb : IGetDataFromDb
                 Console.WriteLine("Executing EF Core 10 Query...");
                 // LINQ query: The filtering is translated into a 'WHERE' clause in SQL
                 var productDetails = await _productService.GetProductDetailsAsync(parentId, name);
+
                 foreach (var prod in productDetails)
                 {
                     if (prod.ParentGroupedProductId != 0)
@@ -46,6 +48,11 @@ public class GetDataFromDb : IGetDataFromDb
             }
             return null;
         }
+    }
+
+    public async Task<List<Product>> GetAllProductsAsync()
+    {
+        return await _productService.GetAllProductDetailsAsync();
     }
 
 }

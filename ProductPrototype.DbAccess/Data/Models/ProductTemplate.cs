@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace ProductPrototype.DbAccess.Data.Models;
 
@@ -17,7 +14,7 @@ public partial class ProductTemplate
 
     [StringLength(400)]
     public string ViewPath { get; set; } = null!;
-
+    public string TemplateStyle { get; set; } = null!;
     public int DisplayOrder { get; set; }
 
     public string? IgnoredProductTypes { get; set; }

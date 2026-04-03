@@ -42,239 +42,305 @@
         }
 
         variants = Model.ProductDetails;
-        if (!string.IsNullOrEmpty(Request.Query["id"]))
-        {
-            var parengProductId = Request.Query["id"];
-
-            var viewPath = Model.ProductDetails
-                .FirstOrDefault(prod => prod.ParentGroupedProductId == parengProductId || prod.Id == parengProductId)
-                ?.ProductTemplate?.ViewPath;
-        }
-
     }
 }
 
 @section Styles {
-    <link href="~/css/site.css" rel="stylesheet" />
+
     <link href="~/css/belson.css" rel="stylesheet" />
-    
+    <link href="~/css/site.css" rel="stylesheet" />
     <link href="~/css/sphere-colors.css" rel="stylesheet" />
 }
 
-<div id="presentation">
+<div id="page">
+    <div style="padding: 5px 0 5px; background-color: #cc0000; color: #FFF; background-image: linear-gradient(#ff9833, #ff6600); text-align: center; border-bottom: 1px solid #000;"><b><a href="/QuickShip-Products" class="promobanner">Up Against a Deadline? Ask About QuickShip Options—Popular Products, Right Away!</a></b></div>
+    <!-- ============================[ Container Area Start ]================================================ -->
+    <div id="container">
+        <!-- ============================[ Header Area Start ]=================================================== -->
+        <div id="header">
+            <div id="brand">
+                <div id="logo"><a href="/"><img src="/Images/logo_belson.jpg" alt="Belson Outdoors® - Home" width="128" height="64" border="0"></a></div>
+                <div id="trademark2">
+                    <img src="/Images/trademark.jpg" alt="Your Outdoor Superstore®" width="280" height="54" border="0">
+                </div>
+                <div id="phone">
+                    <a href="/Contact-Us">
+                        <div id="number">1-800-323-5664</div>
+                        <div id="hours">M-F 8:00am - 4:30pm CT</div>
+                    </a>
+                </div>
+            </div>
+            <div id="headerMenu">
+                <div id="headerMenuBar">
+                    <div id="headerMenuNav">
+                        <a href="/" class="menuNav">Home</a> |
+                        <a href="/About-Us" class="menuNav">About Us</a> |
+                        <a href="/Contact-Us" class="menuNav">Contact Us</a> |
+                        <a href="/FAQs" class="menuNav">FAQs</a> |
+                        <a href="/Sitemap" class="menuNav">Site Map</a> |
+                        <a href="/Payment" class="menuNav">Payments</a>
+                    </div>
+                    <div id="search">
+                        <input name="ctl00$searchBox" type="text" id="searchBox" size="14" aria-label="Search Box">
+                    </div>
+                    <div id="searchButton">
+                        <input type="image" name="ctl00$SearchBtn" id="SearchBtn" title="Search" class="searchBtn" src="Images/searchBtn2.jpg" style="border-width:0px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================[ Header Area End ]===================================================== -->
+        <!-- ============================[ Presentation Area Start ]============================================= -->
+        <div id="presentation">
 
-    <!-- ============================[ Product Area Start ]================================================== -->
-    <div id="product">
+            <!-- ============================[ Product Area Start ]================================================== -->
+            <div id="product">
+                <div>
+                    @Html.Raw(fullDescription)
+                </div>
+            </div>
+            <!-- ============================[ Product Area End ]==================================================== -->
+            <!-- ============================[ Pricing Area Start ]================================================== -->
+            <div id="pricing">
+                <!-- ============================[ Widget Area Start ]=================================================== -->
+
+                <div id="widget">
+                    <div id="itemDetails"><div id="arrow">&#9660;</div>Item Specific Details Available on Linked Model Numbers Below</div>
+                    <div id="question">
+                        <a onclick="askAbout()">
+                            <img src="/Images/question2.png" style="cursor: pointer;" border="0" width="26" height="22" title="Ask An Expert" alt="">
+                        </a>
+                    </div>
+                    <div id="share" onmouseover="showmenu('shares')" onmouseout="hidemenu('shares')">
+                        <a style="cursor: pointer;">
+                            <img border="0" src="/Images/share2.png" width="26" height="22" title="Share" alt="Share">
+                        </a>
+                        <div id="shares">
+                            <div class="slink">
+                                <div class="sicon">
+                                    <img border="0" src="/Images/facebook_16.png" alt="Facebook Icon">
+                                </div><div class="stitle">
+                                    <script type="text/javascript">document.write("<a href='http://www.facebook.com/share.php?u=" + document.location.href + "&t=" + document.title + "' target='_blank' class='share-facebook' >Facebook</a>")</script>
+                                </div>
+                            </div>
+                            <div class="slink">
+                                <div class="sicon">
+                                    <img border="0" src="/Images/blogger_16.png" alt="Blogger Icon">
+                                </div><div class="stitle">
+                                    <script type="text/javascript">document.write("<a href='http://www.blogger.com/blog_this.pyra?u=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-blogger' >Blogger</a>")</script>
+                                </div>
+                            </div>
+                            <div class="slink">
+                                <div class="sicon">
+                                    <img border="0" src="/Images/linkedin_16.png" alt="Linkedin Icon">
+                                </div><div class="stitle">
+                                    <script type="text/javascript">document.write("<a href='http://www.linkedin.com/shareArticle?mini=true&url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-linkedin' >Linkedin</a>")</script>
+                                </div>
+                            </div>
+                            <div class="slink">
+                                <div class="sicon">
+                                    <img border="0" src="/Images/stumbleupon_16.png" alt="Stumbleupon Icon">
+                                </div><div class="stitle">
+                                    <script type="text/javascript">document.write("<a href='http://www.stumbleupon.com/submit?url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-stumbleupon' >StumbleUpon</a>")</script>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="bookmark" onmouseover="showmenu('bookmarks')" onmouseout="hidemenu('bookmarks')">
+                        <a style="cursor: pointer;">
+                            <img border="0" src="/Images/bookmark2.png" width="26" height="22" title="Bookmark" alt="Bookmarks">
+                        </a>
+                        <div id="bookmarks">
+                            <div class="slink">
+                                <div class="sicon">
+                                    <img border="0" src="/Images/pinterest_16.png" alt="Pinterest Icon">
+                                </div><div class="stitle">
+                                    <script type="text/javascript">document.write("<a href='http://pinterest.com/pin/create/bookmarklet/?media=&url=" + document.location.href + "' target='_blank' class='share-pinterest' >Pinterest</a>")</script>
+                                </div>
+                            </div>
+                            <div class="slink">
+                                <div class="sicon">
+                                    <img border="0" src="/Images/windows_16.png" alt="Windows Icon">
+                                </div><div class="stitle">
+                                    <script type="text/javascript">document.write("<a href='https://favorites.live.com/quickadd.aspx?marklet=1&mkt=en-us&url=" + document.location.href + "&title=" + document.title + "&top=1' target='_blank' class='share-live' >Live</a>")</script>
+                                </div>
+                            </div>
+                            <div class="slink">
+                                <div class="sicon">
+                                    <img border="0" src="/Images/reddit_16.png" alt="Reddit Icon">
+                                </div><div class="stitle">
+                                    <script type="text/javascript">document.write("<a href='http://reddit.com/submit?url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-reddit' >Reddit</a>")</script>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ============================[ Widget Area End ]===================================================== -->
+
+
+                <div class="table-container" style="width:610px">
+                    <table id="productTable" class="description" >
+                        <tbody>
+                            <!-- Product rows will be added dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <table>
+                    <tr>
+                        <td id="FOB">(Prices F.O.B. Origin)<br />Some Assembly Required</td>
+                        <td id="bulk_td">
+                            <div id="bulk_inquiry">
+                                <b><a href="javascript:showmenu('bulk')">Bulk Inquiry</a></b>
+                                <div id="bulk">
+                                    <div id="bulk_head">
+                                        <div id="bulk_title">
+                                            <b>&#9660; Bulk Inquiry</b>
+                                        </div>
+                                        <div id="bulk_close">
+                                            <a href="javascript:hidemenu('bulk')">
+                                                <img border="0" src="/Images/close-001.png" width="12" height="12" />
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div id="bulk_copy">
+                                        Enter Item Quantities &amp; <b>'Add to Cart'</b><br />
+                                        From the 'Shop Cart' Screen -<br />
+                                        Select <b>'Click for Quote'</b> (<i>Yellow Button</i>)<br />
+                                        <div id="bulk_copy2">
+                                            Our expert Customer Service staff will work with
+                                            you to provide the best pricing options available.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td id="addToCart_td"><input type="submit" name="ctl00$BodyContent$SubmitBtn" value="Add to Cart" onclick="return validate();" id="SubmitBtn" class="addToCartButton" /></td>
+                    </tr>
+                </table>
+            </div>
+            <!-- ============================[ Pricing Area End ]==================================================== -->
+            <!-- ============================[ Promotion Area Start ]================================================ -->
+            <div id="promotion">
+                <div class="promoRelated">
+                    <div class="promoBar"><img src="/Images/barbg-top.jpg" width="605" height="25" /></div>
+                    <div class="promoTitle"><a href="/Park-Benches" class="promoTitleLink">Related Products</a></div>
+                </div>
+                <div class="promos">
+                    <div class="promoItem">
+                        <a href="/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel">
+                            <img border="0" src="/Images/942SM-V6-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                            Steel Players'<br />
+                            Benches
+                        </a>
+                    </div>
+                    <div class="promoItem">
+                        <a href="/Classic-Style-Square-Steel-Picnic-Table-Diamond-Pattern">
+                            <img border="0" src="/Images/358-V-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                            Square Steel<br />
+                            Picnic Table
+                        </a>
+                    </div>
+                    <div class="promoItem">
+                        <a href="/Classic-Style-Rectangular-Steel-Picnic-Table-Diamond-Pattern">
+                            <img border="0" src="/Images/238-V6-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                            Rectangular Steel<br />
+                            Picnic Table
+                        </a>
+                    </div>
+                    <div class="promoItem">
+                        <a href="/Square-Shade-Structure">
+                            <img border="0" src="/Images/Square-Shade-001-S.jpg" width="130" height="86" class="productImgB" alt="" /><br />
+                            Square<br />
+                            Shade Structure
+                        </a>
+                    </div>
+                </div>
+                <div class="pagination">
+                    <div id="pre"><div id="previous"><a href="/Browse.aspx?b=-1"><img src="/Images/previousA.jpg" border="0" width="110" height="25" /></a></div></div>
+                    <div id="copyright"><a href="/Copyright-and-Disclaimer">Copyright and Disclaimer</a> &copy; 1993-2025, Belson Outdoors, LLC</div>
+                    <div id="nex"><div id="next"><a href="/Browse.aspx?b=1"><img src="/Images/nextA.jpg" border="0" width="110" height="25" /></a></div></div>
+                </div>
+            </div>
+            <!-- ============================[ Promotion Area End ]================================================== -->
+            <br />
+            <!-- ============================[ Footer Area Start ]=================================================== -->
+
+            <div id="footer">
+                <div class="footerBar"><img border="0" src="/Images/botbar.jpg" alt="Call 1-800-323-5664 or Email sales@@belson.com" width="605" height="48"></div>
+                <div class="footerMenu">
+                    <a href="/" class="foot">Home</a> |
+                    <a href="/About-Us" class="foot">About Us</a> |
+                    <a href="/Contact-Us" class="foot">Contact Us</a> |
+                    <a href="/FAQs" class="foot">FAQs</a> |
+                    <a href="/Privacy-Policy" class="foot">Privacy Policy</a> |
+                    <a href="/Sitemap" class="foot">Site Map</a> |
+                    <a href="/Payment" class="foot">Payments</a> |
+                    <a href="/ShoppingCart/Items" class="foot"><b>Shopping Cart</b></a>
+                </div>
+                <div class="footerTargets">
+                    <span class="foot">627 Amersale Drive | Naperville, IL 60563 | (800) 323-5664 | <a href="mailto:sales@@belson.com">sales@@belson.com</a></span>
+                </div>
+            </div>
+            <!-- ============================[ Footer Area End ]===================================================== -->
+
+        </div>
+    </div>
+    <!-- ============================[ Presentation Area End ]=============================================== -->
+
+<!-- ============================[ Container Area End ]================================================== -->
+<!-- ============================[ Navigation Area Start ]=============================================== -->
+    <div id="navigation">
+        <div id="block">
+            <div id="social">
+                <div id="youtube"><a href="https://www.youtube.com/@@belsonOutdoors" rel="noopener noreferrer nofollow" target="_blank" title="Watch Us on YouTube"><img border="0" src="/Images/youtube.jpg" alt="YouTube" width="50" height="25"></a></div>
+                <div id="pinterest"><a href="https://www.pinterest.com/belson/" rel="noopener noreferrer nofollow" target="_blank" title="Pin with Us on Pinterest"><img border="0" src="/Images/pinterest.jpg" alt="Pinterest+" width="50" height="25"></a></div>
+                <div id="rec-management"><a href="https://buyersguide.recmanagement.com/buyers-guide/buyers-guide/v/belson-outdoors-llc,817" rel="noopener noreferrer nofollow" target="_blank" title="See Us on Recreation Managment"><img border="0" src="/Images/rec-management.jpg" alt="Recreation Management" width="50" height="25"></a></div>
+            </div>
+            <div id="cart2">
+                <a href="ShoppingCart/Items" id="ShopCartLnk" title="Shopping Cart"><img src="/Images/cart.jpg" alt="Shopping Cart" width="80" height="27" border="0"></a>
+            </div>
+        </div>
+        <div id="browse">
+            <div id="browseWrap">
+                <div class="browseButton" title="Previous Page"><div id="browsePrev"><a href="/Browse.aspx?b=-1"><img border="0" src="/Images/browsePrev-001.jpg" alt="Previous Page" width="42" height="25"></a></div></div>
+                <div id="browseTitle"><img border="0" src="/Images/browse-001.jpg" width="66" height="25" alt="Browse"></div>
+                <div class="browseButton" title="Next Page"><div id="browseNext"><a href="/Browse.aspx?b=1"><img border="0" src="/Images/browseNext-001.jpg" alt="Next Page" width="42" height="25"></a></div></div>
+            </div>
+        </div>
+        <div style="width: 150px; height: 1px; background-color: #FFF;"><!-- [] --></div>
+        <div id="navMenuWrapper">
+            <div class="navMenu">
+            </div>
+        </div>
         <div>
-            @Html.Raw(fullDescription)
+            <div id="crequest" style="display: none;">
+                <a href="/Request-a-Catalog-from-Belson-Outdoors" class="free">
+                    <img border="0" style="margin-top: 3px;" src="/Images/catalogrequest.jpg" alt="Click Here To Request A Free Catalog" width="108" height="140"><br>
+                    <b>Free Catalog</b>
+                </a>
+            </div>
+            <div id="BBB" style="margin-top: 45px;">
+                <a href="http://www.bbb.org/chicago/business-reviews/barbecue-equipment-and-supplies/belson-outdoors-in-north-aurora-il-88011863" id="BBBLogo" rel="noopener noreferrer" target="_blank">
+                    <img border="0" style="padding: 0; border: 0;" src="/Images/BBB-logo.png" alt="Better Business Bureau">
+                </a>
+            </div>
+            <div id="verify">
+                <div id="DigiCertClickID_kQYB7J1a" data-language="en"></div>
+            </div>
         </div>
     </div>
-    <!-- ============================[ Product Area End ]==================================================== -->
-    <!-- ============================[ Pricing Area Start ]================================================== -->
-    <div id="pricing">
-        <!-- ============================[ Widget Area Start ]=================================================== -->
-
-        <div id="widget">
-            <div id="itemDetails"><div id="arrow">&#9660;</div>Item Specific Details Available on Linked Model Numbers Below</div>
-            <div id="question">
-                <a onclick="askAbout()">
-                    <img src="/Images/question2.png" style="cursor: pointer;" border="0" width="26" height="22" title="Ask An Expert" alt="">
-                </a>
-            </div>
-            <div id="share" onmouseover="showmenu('shares')" onmouseout="hidemenu('shares')">
-                <a style="cursor: pointer;">
-                    <img border="0" src="/Images/share2.png" width="26" height="22" title="Share" alt="Share">
-                </a>
-                <div id="shares">
-                    <div class="slink">
-                        <div class="sicon">
-                            <img border="0" src="/Images/facebook_16.png" alt="Facebook Icon">
-                        </div><div class="stitle">
-                            <script type="text/javascript">document.write("<a href='http://www.facebook.com/share.php?u=" + document.location.href + "&t=" + document.title + "' target='_blank' class='share-facebook' >Facebook</a>")</script>
-                        </div>
-                    </div>
-                    <div class="slink">
-                        <div class="sicon">
-                            <img border="0" src="/Images/blogger_16.png" alt="Blogger Icon">
-                        </div><div class="stitle">
-                            <script type="text/javascript">document.write("<a href='http://www.blogger.com/blog_this.pyra?u=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-blogger' >Blogger</a>")</script>
-                        </div>
-                    </div>
-                    <div class="slink">
-                        <div class="sicon">
-                            <img border="0" src="/Images/linkedin_16.png" alt="Linkedin Icon">
-                        </div><div class="stitle">
-                            <script type="text/javascript">document.write("<a href='http://www.linkedin.com/shareArticle?mini=true&url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-linkedin' >Linkedin</a>")</script>
-                        </div>
-                    </div>
-                    <div class="slink">
-                        <div class="sicon">
-                            <img border="0" src="/Images/stumbleupon_16.png" alt="Stumbleupon Icon">
-                        </div><div class="stitle">
-                            <script type="text/javascript">document.write("<a href='http://www.stumbleupon.com/submit?url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-stumbleupon' >StumbleUpon</a>")</script>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="bookmark" onmouseover="showmenu('bookmarks')" onmouseout="hidemenu('bookmarks')">
-                <a style="cursor: pointer;">
-                    <img border="0" src="/Images/bookmark2.png" width="26" height="22" title="Bookmark" alt="Bookmarks">
-                </a>
-                <div id="bookmarks">
-                    <div class="slink">
-                        <div class="sicon">
-                            <img border="0" src="/Images/pinterest_16.png" alt="Pinterest Icon">
-                        </div><div class="stitle">
-                            <script type="text/javascript">document.write("<a href='http://pinterest.com/pin/create/bookmarklet/?media=&url=" + document.location.href + "' target='_blank' class='share-pinterest' >Pinterest</a>")</script>
-                        </div>
-                    </div>
-                    <div class="slink">
-                        <div class="sicon">
-                            <img border="0" src="/Images/windows_16.png" alt="Windows Icon">
-                        </div><div class="stitle">
-                            <script type="text/javascript">document.write("<a href='https://favorites.live.com/quickadd.aspx?marklet=1&mkt=en-us&url=" + document.location.href + "&title=" + document.title + "&top=1' target='_blank' class='share-live' >Live</a>")</script>
-                        </div>
-                    </div>
-                    <div class="slink">
-                        <div class="sicon">
-                            <img border="0" src="/Images/reddit_16.png" alt="Reddit Icon">
-                        </div><div class="stitle">
-                            <script type="text/javascript">document.write("<a href='http://reddit.com/submit?url=" + document.location.href + "&title=" + document.title + "' target='_blank' class='share-reddit' >Reddit</a>")</script>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- ============================[ Widget Area End ]===================================================== -->
-
-
-        <div class="table-container" style="width:626px"> 
-            <table id="productTable" class="product-table">
-                <thead>
-                <th id="sku-h"></th>
-                <th id="mount-h"></th>
-                <th id="seat-h" style="width: 120px;"></th>
-                <th id="frame-h" style="width: 120px;"></th>
-                <th id="weight-h"></th>
-                <th id="price-h"></th>
-                <th id="qty-h"></th>
-                </thead>
-                <tbody>
-                    <!-- Product rows will be added dynamically -->
-                </tbody>
-            </table>
-        </div>
-
-        <table>
-            <tr>
-                <td id="FOB">(Prices F.O.B. Origin)<br />Some Assembly Required</td>
-                <td id="bulk_td">
-                    <div id="bulk_inquiry">
-                        <b><a href="javascript:showmenu('bulk')">Bulk Inquiry</a></b>
-                        <div id="bulk">
-                            <div id="bulk_head">
-                                <div id="bulk_title">
-                                    <b>&#9660; Bulk Inquiry</b>
-                                </div>
-                                <div id="bulk_close">
-                                    <a href="javascript:hidemenu('bulk')">
-                                        <img border="0" src="/Images/close-001.png" width="12" height="12" />
-                                    </a>
-                                </div>
-                            </div>
-                            <div id="bulk_copy">
-                                Enter Item Quantities &amp; <b>'Add to Cart'</b><br />
-                                From the 'Shop Cart' Screen -<br />
-                                Select <b>'Click for Quote'</b> (<i>Yellow Button</i>)<br />
-                                <div id="bulk_copy2">
-                                    Our expert Customer Service staff will work with
-                                    you to provide the best pricing options available.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </td>
-                <td id="addToCart_td"><input type="submit" name="ctl00$BodyContent$SubmitBtn" value="Add to Cart" onclick="return validate();" id="SubmitBtn" class="addToCartButton" /></td>
-            </tr>
-        </table>
-    </div>
-    <!-- ============================[ Pricing Area End ]==================================================== -->
-    <!-- ============================[ Promotion Area Start ]================================================ -->
-    <div id="promotion">
-        <div class="promoRelated">
-            <div class="promoBar"><img src="/Images/barbg-top.jpg" width="605" height="25" /></div>
-            <div class="promoTitle"><a href="/Park-Benches" class="promoTitleLink">Related Products</a></div>
-        </div>
-        <div class="promos">
-            <div class="promoItem">
-                <a href="/Classic-Style-Flat-Park-Bench-with-Diamond-Pattern-Steel">
-                    <img border="0" src="/Images/942SM-V6-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
-                    Steel Players'<br />
-                    Benches
-                </a>
-            </div>
-            <div class="promoItem">
-                <a href="/Classic-Style-Square-Steel-Picnic-Table-Diamond-Pattern">
-                    <img border="0" src="/Images/358-V-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
-                    Square Steel<br />
-                    Picnic Table
-                </a>
-            </div>
-            <div class="promoItem">
-                <a href="/Classic-Style-Rectangular-Steel-Picnic-Table-Diamond-Pattern">
-                    <img border="0" src="/Images/238-V6-001-T.jpg" width="130" height="86" class="productImgB" alt="" /><br />
-                    Rectangular Steel<br />
-                    Picnic Table
-                </a>
-            </div>
-            <div class="promoItem">
-                <a href="/Square-Shade-Structure">
-                    <img border="0" src="/Images/Square-Shade-001-S.jpg" width="130" height="86" class="productImgB" alt="" /><br />
-                    Square<br />
-                    Shade Structure
-                </a>
-            </div>
-        </div>
-        <div class="pagination">
-            <div id="pre"><div id="previous"><a href="/Browse.aspx?b=-1"><img src="/Images/previousA.jpg" border="0" width="110" height="25" /></a></div></div>
-            <div id="copyright"><a href="/Copyright-and-Disclaimer">Copyright and Disclaimer</a> &copy; 1993-2025, Belson Outdoors, LLC</div>
-            <div id="nex"><div id="next"><a href="/Browse.aspx?b=1"><img src="/Images/nextA.jpg" border="0" width="110" height="25" /></a></div></div>
-        </div>
-    </div>
-    <!-- ============================[ Promotion Area End ]================================================== -->
-    <br />
-    <!-- ============================[ Footer Area Start ]=================================================== -->
-
-    <div id="footer">
-        <div class="footerBar"><img border="0" src="/Images/botbar.jpg" alt="Call 1-800-323-5664 or Email sales@belson.com" width="605" height="48"></div>
-        <div class="footerMenu">
-            <a href="/" class="foot">Home</a> |
-            <a href="/About-Us" class="foot">About Us</a> |
-            <a href="/Contact-Us" class="foot">Contact Us</a> |
-            <a href="/FAQs" class="foot">FAQs</a> |
-            <a href="/Privacy-Policy" class="foot">Privacy Policy</a> |
-            <a href="/Sitemap" class="foot">Site Map</a> |
-            <a href="/Payment" class="foot">Payments</a> |
-            <a href="/ShoppingCart/Items" class="foot"><b>Shopping Cart</b></a>
-        </div>
-        <div class="footerTargets">
-            <span class="foot">627 Amersale Drive | Naperville, IL 60563 | (800) 323-5664 | <a href="mailto:sales@belson.com">sales@belson.com</a></span>
-        </div>
-    </div>
-    <!-- ============================[ Footer Area End ]===================================================== -->
-
+<!-- ============================[ Navigation Area End ]================================================= -->
 </div>
-
-
-
 
 @section Scripts {
     <script>
         const $table = $("#productTable");
-        const $dimension = $(".dimT");
         const $tbody = $("#productTable tbody");
         const tableData = @Json.Serialize(variants);
+
+
          let index = 0;
     </script>
 
@@ -287,8 +353,6 @@
 
         // Execute the rendering function when the page is ready
         $(document).ready(function () {
-      
-            let dimensionGroup = {};
             let productLength = "";
             let modelIndex = 1;
                 tableData.forEach((prod) => 
@@ -300,30 +364,38 @@
                        
                        const headerTemplate = @Html.Raw(prodGrp_Template);
                        let cssClass = headerTemplate.CssClass;
+                       const productTemplate = tableData[0].productTemplate;
+
+                       let productCells = headerTemplate.HeaderTmp.split(".")[0][0];
+                       let headerCells = headerTemplate.HeaderTmp.split(".")[1][0];
+                      
                        $(".productHeaderBar img").attr(headerTemplate.TitleBgImg);
                        if(prodHeader.length > 1)
                            headerData =
                             {
                                 name1: prodHeader[0],
                                 name2: prodHeader[1],
-                                cssClass: cssClass
+                                cssClass: cssClass,
+                                colspan:  productCells - headerCells + 1
                             };
                         else
                           headerData =
                             {
                                 name1: prod.specificationOptionName,
                                 name2: "",
-                                cssClass: cssClass
+                                cssClass: cssClass,
+                                colspan:  productCells - headerCells + 1
                             };
                       
                         let prodGrp_Template = null;
                         
-
-                        if(headerTemplate.HeaderTmp.indexOf("GRP1")>=0){
-                            prodGrp_Template = productGroupHeader_Template;
-                        }else if(headerTemplate.HeaderTmp.indexOf("GRP2")>=0)
+                        
+                        if(headerTemplate.HeaderTmp.indexOf("2HCell")>=0){
+                            prodGrp_Template = T2CellProductGroupHeader_Template;
+                        }
+                        else if(headerTemplate.HeaderTmp.indexOf("4HCell")>=0)
                         {
-                            prodGrp_Template = productGroupHeaderWithDiscount_Template;
+                            prodGrp_Template = T4CellproductGroupHeaderWithDiscount_Template;
                         }
 
                         const productHeaderHtml = prodGrp_Template.replace(/{(\w+)}/g, (match, key) => headerData[key] ?? match);
@@ -332,31 +404,18 @@
                     else
                     {
                         //Create dimesions table
-                        let type = prod.specificationOptionName.trim().toLowerCase();
-                            type = type.replace(/\s+/g, '-');
-                            if (!dimensionGroup[type]) 
-                                dimensionGroup[type] = [];
-
-                            if( dimensionGroup[type].length ==0)
-                            {
-                                let productData =
-                                {
-                                    length: prod.length,
-                                    width: prod.width,
-                                    height: prod.height,
-                                    specificationOptionName:"Model " + modelIndex++
-                                };
-                                dimensionGroup[type].push(productData);
-                                const productDimensionsHtml = dimensions_template.replace(/{(\w+)}/g, (match, key) => productData[key] ?? match);
-                                $dimension.after(productDimensionsHtml);
-                            }
                          $table.append(buildTableBody(prod));
                       }
                  
                 });
-
+                    
                 
             createProductColors();
+            const navData = @Html.Raw(Model.Navigations);
+            for (const navItem of navData) {
+                $(".navMenu").append(`<div class="menu"><a href="/?id=${navItem.Id}&sku=${navItem.Sku}" class="label">${navItem.Name}</a></div>`);
+            }
+
         });
     </script>
 }

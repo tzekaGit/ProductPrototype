@@ -17,6 +17,22 @@ public class ProductService : IProductService
     {
         _context = context;
     }
+    public async Task<List<Product>> GetAllProductDetailsAsync()
+    {
+        return (from prod in _context.Products.AsNoTracking()
+                where prod.ParentGroupedProductId == 0
+                        && !(from assoc in _context.RelatedProducts.AsNoTracking() where assoc.ProductId2 == prod.Id select assoc)
+                           .Any()
+                select new Product
+                {
+                    Name = prod.Name,
+                    Id = prod.Id,
+                    Sku = prod.Sku
+                })
+                .Distinct()
+                .ToList();
+
+    }
 
     public async Task<List<ProductDetailDto>> GetProductDetailsAsync(int parentId, string sku)
     {
@@ -29,7 +45,7 @@ public class ProductService : IProductService
         }
 
         // ⭐️ The query is executed against the injected _context object ⭐️
-        var productDetails = await (from product in _context.Products
+        var productDetails = await (from product in _context.Products.AsNoTracking()
                                         // Inner Join setup
                                     join mapping in _context.ProductSpecificationAttributeMappings on product.Id equals mapping.ProductId
                                     join spcOpt in _context.SpecificationAttributeOptions on mapping.SpecificationAttributeOptionId equals spcOpt.Id
@@ -57,7 +73,7 @@ public class ProductService : IProductService
                                         GroupBySpecificationId = specGr.Id,
                                         SpecificationOptionName = spcOpt.Name
                                     })
-                                    .ToListAsync(); // Executes the query and returns the results
+                            .ToListAsync(); // Executes the query and returns the results
 
         return productDetails;
     }
@@ -134,13 +150,13 @@ public class ProductService : IProductService
         return _context.RelatedProducts.Select(p => p).Where(filter => filter.ProductId1 == ProductId).ToList();
     }
 
-    public async Task<List<Product>> GetRelatedProductDetailAsync(int productId)
+    public async Task<List<ProductDetailDto>> GetRelatedProductDetailAsync(int productId)
     {
 
         var relatedProductDetails = await (from product in _context.Products
                                            join related in _context.RelatedProducts on product.Id equals related.ProductId2
                                            where related.ProductId1 == productId
-                                           select new Product
+                                           select new ProductDetailDto
                                            {
                                                Id = product.Id,
                                                ParentGroupedProductId = productId,
@@ -154,8 +170,13 @@ public class ProductService : IProductService
                                                FullDescription = product.FullDescription,
                                                ShortDescription = product.ShortDescription,
                                            })
-
                                            .ToListAsync();
+
+        foreach (var assoc in relatedProductDetails)
+        {
+            assoc.ProductTemplate = await GetProductTemplateAsync(assoc.Id);
+        }
+
         return relatedProductDetails;
     }
     public async Task<ProductTemplate> GetProductTemplateAsync(int productId)
@@ -168,7 +189,8 @@ public class ProductService : IProductService
                                {
                                    Id = template.Id,
                                    Name = template.Name,
-                                   ViewPath = template.ViewPath
+                                   ViewPath = template.ViewPath,
+                                   TemplateStyle = template.TemplateStyle
                                })
                                .FirstOrDefault();
 

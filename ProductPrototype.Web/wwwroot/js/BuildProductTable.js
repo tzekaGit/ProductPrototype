@@ -1,5 +1,4 @@
 ﻿
-
 function buildVariantRow(variant, hasAssociation) {
 
 	// Seat Color dropdown
@@ -15,33 +14,92 @@ function buildVariantRow(variant, hasAssociation) {
 		.join("");
 	//sécifications
 	const specifications = variant.productSpecificationAttributeOptions[0];
-
+	const variantTemplate = variant.productTemplate;
+	const templateStyle = JSON.parse(variantTemplate.templateStyle);
+	//console.log(templateStyle);
 	const data = {
 		sku: variant.sku || "",
 		specification: specifications ? specifications.specificationName : "",
 		weight: variant.weight,
-		price: formatPrice(variant.price),
+		itemPrice: formatPrice(variant.price),
 		oldPrice: variant.oldPrice !=0? formatPrice(variant.oldPrice):0,
 		seatColors: seatColorOptions,	
 		frameColors: frameColorOptions,
-		style: "",
+		borderRow: "",
 		select1: seatColorOptions.split('</option>').length == 2 ? "span" : "select",
 		select2: frameColorOptions.split('</option').length == 2 ? "span" : "select",
 		i: index,
-		style: hasAssociation == true ? "border-bottom:none" : ""
+		style: templateStyle[0]?.Style ?? "",
 	};
+
+	const counts = {};
+	
+	templateStyle.forEach(css => {
+		let strCss = css.CssClass.replace(/\d+/g, ''); 
+		if (!counts.hasOwnProperty(strCss)) {
+			counts[strCss] = 0;
+		} else {
+			counts[strCss]++;
+		}
+		let uniqueKey = "";
+		if (strCss.indexOf("alpha") >= 0) {
+			uniqueKey = "alpha";
+		} else {
+			uniqueKey = counts[strCss] === 0 ? strCss : strCss + counts[strCss];
+		}
+		uniqueKey = (uniqueKey.indexOf("model") >= 0) ? "model" : uniqueKey
+		uniqueKey = (uniqueKey.indexOf("pick") >= 0 || uniqueKey.indexOf("qty") >= 0 || uniqueKey.indexOf("entry") >= 0)  ? "qty" : uniqueKey
+		data[uniqueKey] = css.CssClass;   // assign the class name as value, or any other value you want
+	});
+	data["tblCss"] = templateStyle[0].CssClass; 
+
+
 	let html = "";
-	html = six_Column_Template.replace(/{(\w+)}/g, (match, key) => data[key] ?? match); //six_Column_Template , seven_Column_WithOldPrice_Template /seven_Column_Template
-	$tbody.append(html);
+	const numNames = {
+		5: "five",
+		6: "six",
+		7: "seven",
+		8: "eight"
+	};
+
+	
+	const templId = variantTemplate.name[0];
+
+	let row_Template = productTmps["six_Column_Template"];
+	
+	//if (data.style?.length > 0)
+	//	data.borderRow = `<tr style = "line-height:15px"><td colspan = "${templId}" style="${data.style}">&nbsp;</td>`;
+
+	html = row_Template.replace(/{(\w+)}/g, (match, key) => data[key] ?? match); //six_Column_Template , seven_Column_WithOldPrice_Template /seven_Column_Template
+	let $row = $(html);
+
+	if (data.frameColors?.length > 0 && templId != 8)
+	{
+		$row.find('td').eq(2).after(`<td class="${data.detail2} id="frameColor"><${data.select2} size="1" name="AN${index}" style="width: 120px;">${data.frameColors}</${data.select2}></td>`);
+	}
+
+	else if (templId == 8 && data.frameColors.length > 0)
+	{
+		$row.find('td').eq(0).before(`<td class="${data.alpha}"> </td>`);
+		$row.find('td').eq(3).after(`<td class="${data.detail2} id="frameColor"><${data.select2} size="1" name="AN${index}" style="width: 120px;">${data.frameColors}</${data.select2}></td>`);
+	}
+
+	if (data["oldPrice"] != null && data["oldPrice"] != 0 )
+		$row.find('td').eq(templId-3).before(`<td class="${data.priceWas}">${data.oldPrice}</td>`);
+
+
+	$tbody.append($row[0].outerHTML);	
 }
 
 
 
 function buildAssociateRow(assoc) {
-	
+	const variantTemplate = assoc.productTemplate;
+	const templateStyle = JSON.parse(variantTemplate.templateStyle);
 	// Quantity input
 	const data = {
 		sku: assoc.sku,
+		tblCss: templateStyle[0].CssClass,
 		name: "Covers",
 		description: "2 Covers Required Per Bench - ",
 		price: formatPrice(assoc.price),
