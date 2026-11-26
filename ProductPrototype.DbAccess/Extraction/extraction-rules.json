@@ -1,0 +1,334 @@
+{
+  "version": 1,
+  "site": "belson.com",
+  "notes": "Declarative extraction rules. Add a new tag/path by adding an entry here; add a new kind of value handling by registering a transform in code.",
+
+  "page": {
+    "fields": [
+      { "id": "name", "target": "Name", "xpath": "//div[@class='productHeaderTitle']/h1", "read": "text",
+        "transforms": [ "deentitize", "collapseWs", "trim" ], "required": true },
+
+      { "id": "shortDescription", "target": "ShortDescription",
+        "xpath": "(//div[@id='product']//p[contains(concat(' ',normalize-space(@class),' '),' justify ')])[1]", "read": "text",
+        "transforms": [ "deentitize", "collapseWs", "trim" ] },
+
+      { "id": "fullDescription", "target": "FullDescription", "xpath": "//div[@id='product']", "read": "innerHtml",
+        "transforms": [ "cleanText" ] },
+
+      { "id": "productImages", "target": "ImageUrls", "xpath": "//div[@id='product']//img[contains(@src,'-M.')]",
+        "read": "attr:src", "multiple": true, "unique": true,
+        "note": "First entry is the main image. Layout varies (leftL/rightL vs leftR/rightR), so match by the -M image suffix, not by container." },
+
+      { "id": "colorCharts", "target": "ColorChartImages", "xpath": "//div[@id='product']//img[contains(@src,'-CC-') or contains(@src,'-BT-')]",
+        "read": "attr:src", "multiple": true, "unique": true },
+
+      { "id": "detailImages", "target": "DetailImages", "xpath": "//div[@id='product']//img[contains(@src,'-D.')]",
+        "read": "attr:src", "multiple": true, "unique": true },
+
+      { "id": "pageSkus", "target": "SkuCrossCheck", "xpath": "//div[@id='pricing']//input[starts-with(@name,'ProductCode')]",
+        "read": "attr:value", "multiple": true }
+    ]
+  },
+
+  "pricing": {
+    "container": "//div[@id='pricing']",
+    "tables": "./table",
+
+    "tableKinds": [
+      { "id": "skip-quickship", "action": "skip", "match": { "classRegex": "(^|\\s)quickshipDetails(\\s|$)" } },
+      { "id": "skip-hidden",    "action": "skip", "match": { "classRegex": "(^|\\s)hiddenModels(\\s|$)" } },
+      { "id": "skip-bulk",      "action": "skip", "match": { "xpath": ".//td[@id='FOB']" } },
+
+      { "id": "group-header", "action": "group", "match": { "classRegex": "^pt[A-Z]" },
+        "name": { "xpath": ".//td[@class='item']//h2", "read": "text", "transforms": [ "deentitize", "collapseWs", "trim" ] } },
+
+      { "id": "group-header-by-shape", "action": "group",
+        "match": { "maxCells": 2, "xpath": ".//h2", "notXPath": ".//td[starts-with(@class,'model')]" },
+        "name": { "xpath": ".//h2", "read": "text", "transforms": [ "deentitize", "collapseWs", "trim" ] } },
+
+      { "id": "associated", "action": "addon",
+        "note": "Associated products are recognised by their cell CSS class (oc*), never by cell count. descriptionBorder1/2 are only visual row borders and are ignored. Add other marker classes here if the full catalog uses them.",
+        "match": { "classRegex": "(^|\\s)description\\w*(\\s|$)", "xpath": ".//td[starts-with(@class,'oc')]" },
+        "createAs": "item",
+        "linkTo": { "table": "RelatedProduct", "from": "previousItem", "to": "this", "dedupeBy": "Sku" } },
+
+      { "id": "item", "action": "item",
+        "match": { "classRegex": "(^|\\s)description\\w*(\\s|$)", "xpath": ".//td[starts-with(@class,'model')]" } }
+    ],
+
+    "itemCells": [
+      { "id": "sku", "target": "Sku", "tdClass": "^model\\d*$", "read": "text",
+        "transforms": [ "deentitize", "collapseWs", "trim" ], "required": true },
+
+      { "id": "weight", "target": "Weight", "tdClass": "^lbs\\d*$", "read": "text",
+        "transforms": [ "deentitize", { "t": "regexReplace", "pattern": "[^0-9.]", "with": "" }, "decimal" ] },
+
+      { "id": "price", "target": "Price", "tdClass": "^price\\d*$", "read": "text",
+        "transforms": [ { "t": "regexReplace", "pattern": "[^0-9.]", "with": "" }, "decimal" ],
+        "multi": "firstIsOldPriceLastIsPrice" },
+
+      { "id": "detail", "tdClass": "^detail\\d*$", "contentRules": [
+          { "id": "attribute-select", "has": ".//select", "emit": "attribute",
+            "attributeName": { "from": "firstOptionValue", "transforms": [ { "t": "regexReplace", "pattern": "^Choose\\s+", "with": "" }, "trim" ] },
+            "options": { "xpath": "./option[not(@disabled) and not(@selected)]", "read": "text", "transforms": [ "deentitize", "collapseWs", "trim" ] } },
+          { "id": "qty-range", "textRegex": "^\\(\\s*(\\d+)\\s*(?:to\\s*(\\d+)|(\\+))\\s*Units?\\s*\\)$", "emit": "qtyRange" },
+          { "id": "text-cell", "emit": "textCell", "transforms": [ "deentitize", "collapseWs", "trim" ] }
+      ] },
+
+      { "id": "qty-control", "tdClass": "^(pick|entry)$", "emit": "qtyControl",
+        "select": ".//select[starts-with(@name,'QTY')]/option[number(@value) > 0]", "openEndedInput": ".//input[contains(@class,'qty_box')]" },
+
+      { "id": "icons", "tdClass": "^alpha$", "emit": "flags", "imgRules": [
+          { "srcRegex": "FF-Icon",   "flag": "FreeFreight" },
+          { "srcRegex": "UA-Glyph",  "flag": "UniversalAccess" },
+          { "srcRegex": "QS-Glyph",  "ignore": true }
+      ] }
+    ],
+
+    "addonCells": [
+      { "id": "sku",     "target": "Sku",  "tdClass": "^ocModel$", "read": "text", "transforms": [ "deentitize", "collapseWs", "trim" ], "required": true },
+      { "id": "name",    "tdClass": "^ocDetail$", "xpath": ".//b", "read": "text", "transforms": [ "deentitize", "collapseWs", "trim" ] },
+      { "id": "price",   "tdClass": "^ocDetail$", "textRegex": "\\$(\\d+(?:\\.\\d+)?)(?:/(\\w+))?", "emit": "priceAndUnit" },
+      { "id": "choices", "tdClass": "^oc(Yes|No)$", "xpath": ".//span[@class='rtx']", "read": "text", "multiple": true }
+    ]
+  },
+
+  "specNaming": {
+    "note": "Variant tables have no header row. The specification cell (first detail cell) is named in this order: 1) quantity-range text is always 'Quantity Tier' (feeds min/max qty, not a spec); 2) the product group's own specificationName (groupProfiles); 3) the first matching text rule here; 4) default. textRegex is tested on the cell text, groupRegex on the group header; 'value' is a template ($1..) applied to the cell text.",
+    "default": {
+      "name": "Specification"
+    },
+    "rules": [
+      {
+        "id": "quantity-tier",
+        "textRegex": "^\\(\\s*\\d+\\s*(?:to\\s*\\d+|\\+)\\s*Units?\\s*\\)$",
+        "name": "Quantity Tier",
+        "storeAs": "qtyRange"
+      },
+      {
+        "id": "mounting-type",
+        "textRegex": "(?i)\\b(?:portable|surface|in-?ground|wall|embedded|freestanding)\\b",
+        "name": "Mounting Type"
+      },
+      {
+        "id": "length",
+        "textRegex": "(?i)^\\d+(?:-\\d+/\\d+)?'\\s*length$",
+        "name": "Length"
+      },
+      {
+        "id": "seating",
+        "textRegex": "(?i)^\\d+\\s*seats?$",
+        "name": "Seating"
+      },
+      {
+        "id": "accessory-type",
+        "groupRegex": "(?i)accessor|anchor|umbrella|\\bbase\\b|stand",
+        "name": "Accessory Type"
+      }
+    ]
+  },
+
+  "columnModel": {
+    "note": "Variant rows have no header. Must-have columns: sku, specification, weight, price, quantity (+ color where the group has one). Everything else is optional and recognised from the row's own cells.",
+    "tableTypes": "group-header (1-2 cells) | variant row (5-9 cells) | associated product (own structure, e.g. oc* cells)",
+    "layoutScope": "group",
+    "layoutNote": "Within one group every variant row has the same cell layout, but it can change from group to group. The layout (ordered cell roles) is read from the group's first row and every other row is checked against it.",
+    "groupHeaderCellCount": { "min": 1, "max": 2 },
+    "variantCellCount": { "min": 5, "max": 9 },
+    "specificationCell": "firstDetailCell",
+    "colorCells": "otherDetailCellsExceptQuantityRange",
+    "optionalRoles": [ "icon", "oldPrice" ],
+    "priceCells": "oneIsPrice_twoAreOldAndNew"
+  },
+
+  "groupProfiles": {
+    "note": "What a column MEANS depends on the product group, so it is defined per group (first matching profile wins; match on the group header text and/or the pt* table class). specificationName names the specification cell. colors are matched to a colour cell by CONTENT, not position: kind select|text, optional textRegex (cell text) / placeholderRegex (select label). Cells that match no slot use the select's own label ('Choose Seat Color' -> Seat Color), then 'Color'. The default profile's colors are shared fallback slots for every group.",
+    "default": {
+      "id": "default",
+      "requiredRoles": [
+        "sku",
+        "specification",
+        "weight",
+        "price",
+        "quantity"
+      ],
+      "colors": [
+        {
+          "name": "Frame Color",
+          "kind": "text",
+          "textRegex": "(?i)\\s+frame$",
+          "valueTransforms": [
+            {
+              "t": "regexReplace",
+              "pattern": "(?i)\\s+frame$",
+              "with": ""
+            }
+          ]
+        }
+      ]
+    },
+    "profiles": [
+      {
+        "id": "accessories",
+        "groupRegex": "(?i)accessor|anchor",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "umbrellas",
+        "groupRegex": "(?i)umbrella",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "park-master-wood",
+        "groupRegex": "(?i)complete wood picnic",
+        "specificationName": "Wood Type",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "color",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "park-master-aluminum",
+        "groupRegex": "(?i)complete aluminum picnic",
+        "specificationName": "Material",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "color",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "park-master-plastic",
+        "groupRegex": "(?i)complete recycled plastic picnic",
+        "specificationName": "Plastic Color",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "color",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "park-master-frame-kit",
+        "groupRegex": "(?i)frame kit",
+        "specificationName": "Frame Kit",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "color",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "shelter-tables",
+        "groupRegex": "(?i)shelter table",
+        "specificationName": "Wood Type",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "color",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "trash-receptacles",
+        "groupRegex": "(?i)trash receptacle",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "color",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": [
+          {
+            "name": "Color",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "id": "picnic-tables",
+        "groupRegex": "(?i)picnic table",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "color",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "benches",
+        "groupRegex": "(?i)\\bbench(?:es)?\\b",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "color",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      },
+      {
+        "id": "bike-racks",
+        "groupRegex": "(?i)bike rack",
+        "requiredRoles": [
+          "sku",
+          "specification",
+          "weight",
+          "price",
+          "quantity"
+        ],
+        "colors": []
+      }
+    ]
+  },
+
+  "validation": [
+    { "id": "sku-order-matches-page", "check": "itemAndAddonSkusEqualInOrder", "against": "pageSkus", "severity": "warn" },
+    { "id": "unclassified-table", "check": "noUnclassifiedDescriptionTables", "severity": "warn" },
+    { "id": "required-field", "check": "requiredFieldsPresent", "severity": "error" },
+    { "id": "required-roles", "check": "profileRequiredRolesPresent", "severity": "warn" },
+    { "id": "associated-has-parent", "check": "associatedFollowsAnItem", "severity": "warn" },
+    { "id": "group-layout-consistent", "check": "groupRowsShareOneCellLayout", "severity": "warn" },
+    { "id": "variant-cell-count", "check": "variantRowCellCountInRange", "min": 5, "max": 9, "severity": "warn" },
+    { "id": "group-header-cell-count", "check": "groupHeaderCellCountInRange", "min": 1, "max": 2, "severity": "warn" }
+  ]
+}
