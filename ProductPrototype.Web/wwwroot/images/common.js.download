@@ -1,9 +1,0 @@
-﻿
-/*
-function objFocus(focusObject) {
-    if (keycode == 13) {
-        if (focusObject!=null)
-            $(focusObject).focus();
-    }
-}
-*/
