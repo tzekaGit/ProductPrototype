@@ -5,28 +5,13 @@
 
   "page": {
     "fields": [
-      { "id": "name", "target": "Name", "xpath": "//div[@class='productHeaderTitle']/h1", "read": "text",
-        "transforms": [ "deentitize", "collapseWs", "trim" ], "required": true },
-
-      { "id": "shortDescription", "target": "ShortDescription",
-        "xpath": "(//div[@id='product']//p[contains(concat(' ',normalize-space(@class),' '),' justify ')])[1]", "read": "text",
-        "transforms": [ "deentitize", "collapseWs", "trim" ] },
-
-      { "id": "fullDescription", "target": "FullDescription", "xpath": "//div[@id='product']", "read": "innerHtml",
-        "transforms": [ "cleanText" ] },
-
-      { "id": "productImages", "target": "ImageUrls", "xpath": "//div[@id='product']//img[contains(@src,'-M.')]",
-        "read": "attr:src", "multiple": true, "unique": true,
-        "note": "First entry is the main image. Layout varies (leftL/rightL vs leftR/rightR), so match by the -M image suffix, not by container." },
-
-      { "id": "colorCharts", "target": "ColorChartImages", "xpath": "//div[@id='product']//img[contains(@src,'-CC-') or contains(@src,'-BT-')]",
-        "read": "attr:src", "multiple": true, "unique": true },
-
-      { "id": "detailImages", "target": "DetailImages", "xpath": "//div[@id='product']//img[contains(@src,'-D.')]",
-        "read": "attr:src", "multiple": true, "unique": true },
-
-      { "id": "pageSkus", "target": "SkuCrossCheck", "xpath": "//div[@id='pricing']//input[starts-with(@name,'ProductCode')]",
-        "read": "attr:value", "multiple": true }
+      { "id": "name", "target": "Name", "xpath": "//div[@class='productHeaderTitle']/h1", "read": "text", "transforms": [ "deentitize", "collapseWs", "trim" ], "required": true },
+      { "id": "shortDescription", "target": "ShortDescription", "xpath": "(//div[@id='product']//p[contains(concat(' ',normalize-space(@class),' '),' justify ')])[1]", "read": "text", "transforms": [ "deentitize", "collapseWs", "trim" ] },
+      { "id": "fullDescription", "target": "FullDescription", "xpath": "//div[@id='product']", "read": "innerHtml", "transforms": [ "cleanText" ] },
+      { "id": "productImages", "target": "ImageUrls", "xpath": "//div[@id='product']//img[contains(@src,'-M.')]", "read": "attr:src", "multiple": true, "unique": true, "note": "First entry is the main image. Layout varies (leftL/rightL vs leftR/rightR), so match by the -M image suffix, not by container." },
+      { "id": "colorCharts", "target": "ColorChartImages", "xpath": "//div[@id='product']//img[contains(@src,'-CC-') or contains(@src,'-BT-')]","read": "attr:src", "multiple": true, "unique": true },
+      { "id": "detailImages", "target": "DetailImages", "xpath": "//div[@id='product']//img[contains(@src,'-D.')]","read": "attr:src", "multiple": true, "unique": true },
+      { "id": "pageSkus", "target": "SkuCrossCheck", "xpath": "//div[@id='pricing']//input[starts-with(@name,'ProductCode')]", "read": "attr:value", "multiple": true }
     ]
   },
 
