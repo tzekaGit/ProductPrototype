@@ -1,14 +1,18 @@
-﻿using System.Text.RegularExpressions;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using ProductPrototype.DbAccess.Data.Models;
+using ProductPrototype.DbAccess.Interfaces;
 using ProductPrototype.DbAccess.Services;
+using System.Text.RegularExpressions;
 
 namespace ProductPrototype.DbAccess;
 
-public partial class HtmlProductExtractor
+public partial class HtmlProductExtractor(IJsonConfigStore jsonConfigStore)
 {
+    private readonly IJsonConfigStore _jsonConfigStore = jsonConfigStore;
     private void CreateAttributeFromText(HtmlNode row, Product product)
     {
+        var columns = _jsonConfigStore.DeSerializeSection<List<ColumnStyle>>("Columns", false);
+
         var allColumnNumber = row.SelectNodes(".//td[not(contains(@class,'price') or contains(@class,'QTY') or contains(@class,'pick')) ]")?.Count ?? 0;
         int cellAttrIndex = 0;
 

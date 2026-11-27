@@ -1,0 +1,24 @@
+{
+  "paths": [
+    {
+      "PathName": "ProductName",
+      "PathValue": ".//td[not(contains(@class,'price') or contains(@class,'QTY') or contains(@class,'pick'))]",
+      "DBDbField": "Product_Name"
+    }],
+
+    "StringCleanUpPattern":
+    [
+      {
+        "PathName": "Punctuation",
+        "PathValue": "[\\p{P}\\p{S}]", // [\p{P}\p{S}] 
+        "DBDbField": "Product_Price"
+      },
+      {
+        "PathName": "ProductSku",
+        "PathValue": ".//td[2]",
+        "DBDbField": "Product_SKU"
+      }
+    ]
+
+  
+}
