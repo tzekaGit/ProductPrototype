@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using ProductPrototype.DbAccess;
+using ProductPrototype.DbAccess.ProductExtractor;
 using ProductPrototype.DbAccess.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,10 +23,16 @@ builder.Services.AddScoped<ProductService>();
 // Use AddDbContext, which is specific for DbContext instances
 builder.Services.AddDbContext<RepositoryContext>(options =>
 {
-	// This is where you configure the database provider (SQL Server, MySQL, etc.)
-	// and pass the connection string, typically read from configuration.
-	options.UseSqlServer(builder.Configuration.GetConnectionString("Belson4.91"));
+    // This is where you configure the database provider (SQL Server, MySQL, etc.)
+    // and pass the connection string, typically read from configuration.
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Belson4.91"));
 });
+
+// Register the OrderWriter service
+builder.Services.AddDatabaseProject("/ProductExtractor/XPathConfig.json");
+using ServiceProvider provider = services.BuildServiceProvider();
+var writer = provider.GetRequiredService<OrderWriter>();
+writer.WriteOrder();
 
 var app = builder.Build();
 
