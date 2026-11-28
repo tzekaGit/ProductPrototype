@@ -5,12 +5,9 @@ namespace ProductPrototype.DbAccess.ProductExtractor;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddDatabaseProject(
-        this IServiceCollection services,
-        string configFilePath)
+    public static IServiceCollection AddDatabaseProject(this IServiceCollection services, string configFilePath)
     {
-        services.AddSingleton<IJsonConfigStore>(_ => new JsonDocumentConfigStore(configFilePath));
-        services.AddScoped<OrderWriter>();
+        services.AddSingleton<IJsonConfigStore>(_ => new JsonDocumentConfigStore(Directory.GetCurrentDirectory() + configFilePath));
         return services;
     }
 }

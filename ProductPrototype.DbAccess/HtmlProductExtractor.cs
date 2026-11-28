@@ -1,15 +1,16 @@
 ﻿using HtmlAgilityPack;
 using Microsoft.EntityFrameworkCore;
 using ProductPrototype.DbAccess.Data.Models;
+using ProductPrototype.DbAccess.Interfaces;
 
 namespace ProductPrototype.DbAccess;
 
 public partial class HtmlProductExtractor
 {
-    public HtmlProductExtractor(RepositoryContext context)
+    public HtmlProductExtractor(RepositoryContext context, IJsonConfigStore jsonConfigStore)
     {
         _context = context;
-
+        _jsonConfigStore = jsonConfigStore;
     }
 
     public async Task ExtractAllProductsFromHtmlAsync(string productName = "")

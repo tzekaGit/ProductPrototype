@@ -7,11 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Data\XPathConfig.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ProductPrototype.DbAccess\ProductPrototype.DbAccess.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Data\XPathConfig.json" />
   </ItemGroup>
 
 

@@ -1,19 +1,20 @@
 ﻿using HtmlAgilityPack;
 using ProductPrototype.DbAccess.Data.Models;
-using ProductPrototype.DbAccess.Interfaces;
+using ProductPrototype.DbAccess.ProductExtractor.Models;
 using ProductPrototype.DbAccess.Services;
 using System.Text.RegularExpressions;
 
 namespace ProductPrototype.DbAccess;
 
-public partial class HtmlProductExtractor(IJsonConfigStore jsonConfigStore)
+public partial class HtmlProductExtractor
 {
-    private readonly IJsonConfigStore _jsonConfigStore = jsonConfigStore;
+
     private void CreateAttributeFromText(HtmlNode row, Product product)
     {
-        var columns = _jsonConfigStore.DeSerializeSection<List<ColumnStyle>>("Columns", false);
+        var Paths = _jsonConfigStore.DeserializeSection<List<XPath>>("Paths");
+        var PriceOrQTY = Paths.FirstOrDefault(path => path.PathName == "PriceOrQTY")?.PathValue;
 
-        var allColumnNumber = row.SelectNodes(".//td[not(contains(@class,'price') or contains(@class,'QTY') or contains(@class,'pick')) ]")?.Count ?? 0;
+        var allColumnNumber = row.SelectNodes(PriceOrQTY)?.Count ?? 0;
         int cellAttrIndex = 0;
 
 

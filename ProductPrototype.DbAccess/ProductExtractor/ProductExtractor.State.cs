@@ -1,11 +1,12 @@
 ﻿using ProductPrototype.DbAccess.Data.Models;
+using ProductPrototype.DbAccess.Interfaces;
 
 namespace ProductPrototype.DbAccess;
 
 public partial class HtmlProductExtractor
 {
     private List<ProdRowTmp> prodRowTmps = new();
-
+    private readonly IJsonConfigStore _jsonConfigStore;
     //db entities
     private List<Product> products = new();
     private List<ProductAttribute> productAttributes = new();

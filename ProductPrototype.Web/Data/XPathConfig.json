@@ -1,7 +1,7 @@
 {
-  "paths": [
+  "Paths": [
     {
-      "PathName": "ProductName",
+      "PathName": "PriceOrQTY",
       "PathValue": ".//td[not(contains(@class,'price') or contains(@class,'QTY') or contains(@class,'pick'))]",
       "DBDbField": "Product_Name"
     }],
@@ -10,7 +10,7 @@
     [
       {
         "PathName": "Punctuation",
-        "PathValue": "[\\p{P}\\p{S}]", // [\p{P}\p{S}] 
+        "PathValue": "[\\p{P}\\p{S}]",
         "DBDbField": "Product_Price"
       },
       {
@@ -19,6 +19,4 @@
         "DBDbField": "Product_SKU"
       }
     ]
-
-  
 }

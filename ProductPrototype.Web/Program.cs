@@ -29,10 +29,7 @@ builder.Services.AddDbContext<RepositoryContext>(options =>
 });
 
 // Register the OrderWriter service
-builder.Services.AddDatabaseProject("/ProductExtractor/XPathConfig.json");
-using ServiceProvider provider = services.BuildServiceProvider();
-var writer = provider.GetRequiredService<OrderWriter>();
-writer.WriteOrder();
+builder.Services.AddDatabaseProject("\\Data\\XPathConfig.json");
 
 var app = builder.Build();
 
